@@ -5,943 +5,591 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ATMOSTAT</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#090c10;--bg2:#0e1219;--bg3:#131820;--bg4:#19202c;
-  --border:#1d2b38;--bord2:#253545;
-  --text:#7090a8;--text2:#b0c8dc;--bright:#deeef8;--dim:#2e4255;
-  --c-temp:#ff6b6b;--c-hum:#4fc3f7;--c-pres:#a5d86e;--c-co2:#ffa94d;
-  --c-noise:#ce93d8;--c-rain:#40c4ff;--c-wind:#4dd0e1;--c-gust:#90caf9;--c-dew:#f48fb1;
-  --mono:'JetBrains Mono',monospace;--sans:'Figtree',sans-serif;
-  --rad:12px;
-}
+:root{--bg:#0a0d12;--bg2:#0f1318;--bg3:#141920;--bg4:#1a2030;--border:#1e2a38;--bord2:#263344;--text:#7a9ab0;--text2:#b8d0e0;--bright:#e2eff8;--dim:#334a5a;--c0:#ff6b6b;--c1:#4fc3f7;--c2:#aed581;--c3:#ffa94d;--c4:#ce93d8;--c5:#4dd0e1;--c6:#80cbc4;--c7:#90caf9;--c8:#f48fb1;--green:#4caf50;--orange:#ff9800;--red:#f44336;--mono:'JetBrains Mono',monospace;--sans:'Figtree',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;overflow:hidden;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;display:flex;flex-direction:column;-webkit-tap-highlight-color:transparent;}
-
-/* ── TOPBAR ── */
-#topbar{
-  flex-shrink:0;height:50px;
-  background:rgba(9,12,16,.96);backdrop-filter:blur(18px);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 12px;gap:8px;
-  position:relative;z-index:200;
-}
-.logo{display:flex;align-items:center;gap:7px;flex-shrink:0;}
-.logo-mark{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--c-wind),rgba(77,208,225,.15));display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 0 12px rgba(77,208,225,.2);}
-.logo-name{font-weight:900;font-size:16px;color:var(--bright);letter-spacing:-.4px;}
-
-/* lieu tabs */
-.lieu-tabs{display:flex;gap:4px;margin-left:8px;}
-.lieu-tab{
-  padding:4px 12px;border-radius:14px;font-size:12px;font-weight:600;
-  background:transparent;border:1px solid var(--border);color:var(--dim);
-  cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--sans);
-}
-.lieu-tab.active{background:rgba(77,208,225,.12);border-color:rgba(77,208,225,.4);color:var(--c-wind);}
-
-.spacer{flex:1;}
-.hdr-btn{width:30px;height:30px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.hdr-btn:hover{color:var(--bright);border-color:var(--bord2);}
-
-/* ── SHORTCUT BAR ── */
-#shortcut-bar{
-  flex-shrink:0;
-  display:flex;gap:5px;overflow-x:auto;
-  padding:7px 12px;background:var(--bg2);border-bottom:1px solid var(--border);
-  scrollbar-width:none;
-}
-#shortcut-bar::-webkit-scrollbar{display:none;}
-.sc-btn{
-  flex-shrink:0;display:flex;align-items:center;gap:5px;
-  padding:4px 10px;border-radius:12px;
-  background:var(--bg3);border:1px solid var(--border);
-  color:var(--text);font-size:11px;font-weight:600;cursor:pointer;
-  transition:all .15s;font-family:var(--sans);white-space:nowrap;
-}
-.sc-btn:hover{color:var(--bright);border-color:var(--bord2);}
-.sc-btn .sc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-
-/* ── PERIOD BAR ── */
-#period-bar{
-  flex-shrink:0;
-  display:flex;gap:4px;overflow-x:auto;align-items:center;
-  padding:6px 12px;background:var(--bg2);border-bottom:1px solid var(--border);
-  scrollbar-width:none;
-}
-#period-bar::-webkit-scrollbar{display:none;}
-.per-btn{flex-shrink:0;padding:4px 10px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--dim);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans);}
-.per-btn.active,.per-btn:hover{background:rgba(77,208,225,.1);border-color:rgba(77,208,225,.35);color:var(--c-wind);}
-.per-sep{width:1px;height:16px;background:var(--border);flex-shrink:0;margin:0 2px;}
-.cal-row{
-  display:none;flex-shrink:0;display:none;align-items:center;gap:6px;
-  padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;
-}
-.cal-row.show{display:flex;}
-.cal-row input[type=date]{background:transparent;border:none;color:var(--bright);font-family:var(--mono);font-size:11px;color-scheme:dark;outline:none;width:110px;}
-.cal-apply{padding:3px 8px;border-radius:7px;background:var(--c-wind);border:none;color:#07090f;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);}
-
-/* ── MAIN SCROLL ── */
-#main{flex:1;overflow-y:auto;overflow-x:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;display:flex;flex-direction:column;-webkit-tap-highlight-color:transparent;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 120% 60% at -10% 0%,rgba(79,195,247,.04) 0%,transparent 50%),radial-gradient(ellipse 80% 80% at 110% 100%,rgba(255,107,107,.03) 0%,transparent 50%);}
+#header{flex-shrink:0;background:rgba(10,13,18,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 14px;height:52px;display:flex;align-items:center;gap:10px;position:relative;z-index:100;}
+.logo{display:flex;align-items:center;gap:9px;flex-shrink:0;}
+.logo-dot{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#4fc3f7,rgba(79,195,247,.2));display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 14px rgba(79,195,247,.25);}
+.logo-txt{font-family:var(--sans);font-weight:900;font-size:17px;color:var(--bright);letter-spacing:-.5px;}
+.logo-ver{font-size:9px;color:#4fc3f7;letter-spacing:3px;text-transform:uppercase;}
+#lieu-bar{display:flex;gap:6px;margin-left:auto;align-items:center;overflow-x:auto;scrollbar-width:none;}
+#lieu-bar::-webkit-scrollbar{display:none;}
+.lieu-btn{padding:5px 12px;border-radius:16px;font-size:12px;font-weight:600;background:var(--bg3);border:1px solid var(--border);color:var(--dim);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--sans);}
+.lieu-btn.active{background:rgba(79,195,247,.12);border-color:rgba(79,195,247,.4);color:#4fc3f7;}
+.hdr-actions{display:flex;gap:6px;flex-shrink:0;margin-left:8px;}
+.icon-btn{width:32px;height:32px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:var(--sans);}
+.icon-btn:hover{border-color:var(--bord2);color:var(--bright);}
+#module-tabs{flex-shrink:0;display:flex;overflow-x:auto;background:var(--bg2);border-bottom:1px solid var(--border);scrollbar-width:none;position:relative;z-index:99;}
+#module-tabs::-webkit-scrollbar{display:none;}
+.mod-tab{display:flex;align-items:center;gap:7px;padding:10px 16px;border-bottom:2px solid transparent;color:var(--dim);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;letter-spacing:.3px;}
+.mod-tab:hover{color:var(--text2);background:rgba(255,255,255,.02);}
+.mod-tab.active{color:var(--bright);border-bottom-color:#4fc3f7;}
+#main{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:1;}
 #main::-webkit-scrollbar{width:3px;}
+#main::-webkit-scrollbar-track{background:var(--bg2);}
 #main::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-
-/* ── LIEU PAGE ── */
-.lieu-page{display:none;}
-.lieu-page.active{display:block;}
-
-/* ── MODULE SECTION ── */
-.mod-section{padding:10px 12px 0;}
-.mod-header{
-  display:flex;align-items:center;gap:8px;
-  padding:10px 0 8px;
-  border-bottom:1px solid var(--border);
-  margin-bottom:10px;
-  position:sticky;top:0;z-index:10;
-  background:var(--bg);
-}
-.mod-icon{font-size:18px;}
-.mod-name{font-weight:700;font-size:15px;color:var(--bright);}
-.mod-sync{font-size:10px;color:var(--dim);font-family:var(--mono);margin-left:auto;}
-.mod-accent{width:3px;height:20px;border-radius:2px;flex-shrink:0;}
-
-/* ── RT VALUES (compact inline) ── */
-.rt-row{
-  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;
-}
-.rt-chip{
-  display:flex;align-items:baseline;gap:4px;
-  padding:6px 10px;border-radius:10px;
-  background:var(--bg2);border:1px solid var(--border);
-  position:relative;overflow:hidden;
-  flex:1;min-width:90px;
-}
-.rt-chip::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--chip-c,var(--c-wind));}
-.rt-chip-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);flex-shrink:0;white-space:nowrap;}
-.rt-chip-val{font-family:var(--mono);font-size:20px;color:var(--chip-c,var(--bright));line-height:1;font-weight:500;}
-.rt-chip-unit{font-size:9px;color:var(--dim);font-family:var(--mono);}
-.rt-chip-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;margin-left:2px;}
-
-/* wind compass chip */
-.wind-chip{
-  display:flex;align-items:center;gap:10px;
-  padding:8px 10px;border-radius:10px;
-  background:var(--bg2);border:1px solid var(--border);
-  flex:1;min-width:180px;
-  position:relative;overflow:hidden;
-}
-.wind-chip::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-wind);}
-.compass{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--bord2);position:relative;flex-shrink:0;background:var(--bg3);}
-.c-n{position:absolute;top:1px;left:50%;transform:translateX(-50%);font-size:7px;color:var(--dim);}
-.c-s{position:absolute;bottom:1px;left:50%;transform:translateX(-50%);font-size:7px;color:var(--dim);}
-.c-e{position:absolute;right:2px;top:50%;transform:translateY(-50%);font-size:7px;color:var(--dim);}
-.c-w{position:absolute;left:2px;top:50%;transform:translateY(-50%);font-size:7px;color:var(--dim);}
-.c-arrow{position:absolute;top:50%;left:50%;width:1.5px;height:16px;background:linear-gradient(to top,var(--c-temp),transparent);transform-origin:bottom center;transform:translateX(-50%) translateY(-100%);transition:transform .5s;border-radius:1px;}
-.wind-info{flex:1;}
-.wind-info-row{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);padding:2px 0;}
-.wind-info-row:last-child{border-bottom:none;}
-.wi-lbl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
-.wi-val{font-family:var(--mono);font-size:16px;color:var(--bright);}
-.wi-u{font-size:9px;color:var(--dim);}
-
-/* rain tiles */
-.rain-row{display:flex;gap:6px;margin-bottom:10px;}
-.rain-tile{flex:1;text-align:center;padding:7px 5px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;position:relative;overflow:hidden;}
-.rain-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c-rain);}
-.rt-lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:4px;}
-.rt-val{font-family:var(--mono);font-size:18px;color:var(--c-rain);}
-.rt-unit{font-size:9px;color:var(--dim);}
-
-/* ── CHART CARD ── */
-.chart-card{
-  background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);
-  padding:12px;margin-bottom:10px;
-}
-/* summary — one line */
-.chart-sum{
-  display:flex;gap:6px;align-items:center;flex-wrap:wrap;
-  margin-bottom:8px;
-  padding:6px 8px;background:var(--bg3);border-radius:8px;
-  font-family:var(--mono);font-size:11px;
-}
-.cs-item{display:flex;align-items:baseline;gap:3px;padding:0 6px;border-right:1px solid var(--border);}
-.cs-item:last-child{border-right:none;}
-.cs-k{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;}
-.cs-v{font-size:13px;font-weight:500;}
-
-/* chart tabs + stats — same row */
-.chart-controls{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
-.ct-btn{padding:4px 9px;border-radius:10px;font-size:10px;font-weight:700;background:var(--bg3);border:1px solid var(--border);color:var(--dim);cursor:pointer;transition:all .15s;font-family:var(--sans);}
-.ct-btn.active{color:#090c10;border-color:transparent;}
-.ctrl-sep{width:1px;height:14px;background:var(--border);margin:0 2px;flex-shrink:0;}
-.stog{display:flex;align-items:center;gap:3px;padding:4px 8px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);font-size:10px;font-weight:600;color:var(--dim);cursor:pointer;user-select:none;transition:all .15s;}
+.page{display:none;padding:12px 12px 24px;}
+.page.active{display:block;}
+.rt-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;}
+.rt-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--card-accent,#4fc3f7);}
+.rt-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.rt-card-name{font-weight:700;font-size:15px;color:var(--bright);display:flex;align-items:center;gap:7px;}
+.rt-card-sync{font-size:10px;color:var(--dim);font-family:var(--mono);}
+.rt-values{display:grid;gap:0;margin-bottom:10px;}
+.rt-val-item{padding:7px 0;border-bottom:1px solid var(--border);}
+.rt-val-item:last-child{border-bottom:none;}
+.rt-val-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+.rt-val-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);}
+.rt-val-main{display:flex;align-items:baseline;gap:3px;}
+.rt-val-num{font-family:var(--mono);font-weight:500;font-size:28px;line-height:1;}
+.rt-val-unit{font-size:11px;color:var(--dim);font-family:var(--mono);}
+.wind-block{display:flex;align-items:center;gap:14px;padding:8px 0;}
+.compass{width:64px;height:64px;border-radius:50%;border:2px solid var(--bord2);position:relative;flex-shrink:0;background:var(--bg3);}
+.compass-arrow{position:absolute;top:50%;left:50%;width:2px;height:24px;background:linear-gradient(to top,#ff6b6b,transparent);transform-origin:bottom center;transform:translateX(-50%) translateY(-100%);transition:transform .5s ease;border-radius:2px;}
+.compass-n{position:absolute;top:3px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--dim);}
+.compass-s{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--dim);}
+.compass-e{position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:8px;color:var(--dim);}
+.compass-o{position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:8px;color:var(--dim);}
+.wind-stats{flex:1;}
+.wind-stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--border);}
+.wind-stat-row:last-child{border-bottom:none;}
+.ws-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
+.ws-val{font-family:var(--mono);font-size:20px;color:var(--bright);}
+.ws-unit{font-size:10px;color:var(--dim);}
+.rain-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:8px;}
+.rain-tile{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;}
+.rain-tile-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:5px;}
+.rain-tile-val{font-family:var(--mono);font-size:20px;color:var(--c5);font-weight:500;}
+.rain-tile-unit{font-size:10px;color:var(--dim);}
+.period-wrap{display:flex;overflow-x:auto;gap:4px;margin-bottom:10px;scrollbar-width:none;}
+.period-wrap::-webkit-scrollbar{display:none;}
+.per-btn{flex-shrink:0;padding:5px 11px;border-radius:16px;background:var(--bg3);border:1px solid var(--border);color:var(--dim);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans);}
+.per-btn:hover,.per-btn.active{background:rgba(79,195,247,.1);border-color:rgba(79,195,247,.35);color:#4fc3f7;}
+.custom-range{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;font-size:11px;}
+.custom-range input[type=date]{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:6px 9px;color:var(--bright);font-family:var(--mono);font-size:11px;color-scheme:dark;outline:none;flex:1;min-width:120px;}
+.custom-range input:focus{border-color:#4fc3f7;}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
+.chart-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.ct-btn{padding:5px 11px;border-radius:14px;font-size:11px;font-weight:600;background:var(--bg3);border:1px solid var(--border);color:var(--dim);cursor:pointer;transition:all .15s;font-family:var(--sans);}
+.ct-btn.active{color:#0a0d12;border-color:transparent;font-weight:700;}
+.chart-wrap{position:relative;height:200px;}
+.chart-summary{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.csum{flex:1;min-width:60px;text-align:center;}
+.csum-v{font-family:var(--mono);font-size:17px;color:var(--bright);font-weight:500;}
+.csum-k{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-top:2px;}
+.stat-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center;}
+.stat-lbl{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;}
+.stog{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--dim);cursor:pointer;transition:all .15s;user-select:none;}
+.stog input{margin:0;accent-color:currentColor;}
 .stog.on{border-color:currentColor;}
-.stog input[type=checkbox]{margin:0;accent-color:currentColor;width:10px;height:10px;}
-.chart-wrap{position:relative;height:190px;}
-
-/* ── AUTH ── */
-#auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:999;}
-.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 22px;max-width:380px;width:100%;}
-.auth-box h2{font-size:20px;font-weight:900;color:var(--bright);margin-bottom:5px;}
-.auth-box p{font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:22px;}
-.fg{margin-bottom:11px;}
-.fg label{display:block;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--c-wind);margin-bottom:4px;}
-.fg input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--bright);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .15s;}
-.fg input:focus{border-color:var(--c-wind);}
-.btn-main{width:100%;padding:11px;background:var(--c-wind);border:none;border-radius:8px;color:#07090f;font-family:var(--sans);font-size:13px;font-weight:800;cursor:pointer;transition:all .18s;}
-.btn-main:hover{filter:brightness(1.1);transform:translateY(-1px);}
-.err-box{background:rgba(244,67,54,.08);border:1px solid rgba(244,67,54,.25);border-radius:7px;padding:8px 11px;font-size:11px;color:#ef9a9a;margin-top:9px;display:none;}
-.auth-note{font-size:9px;color:var(--dim);margin-top:14px;text-align:center;line-height:1.8;}
-.auth-note a{color:var(--c-wind);text-decoration:none;}
-.auth-note strong{color:var(--text2);}
-
-/* ── LOADER ── */
-.loader{text-align:center;padding:32px 20px;color:var(--dim);font-size:11px;}
-.loader::before{content:'';display:block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--c-wind);border-radius:50%;margin:0 auto 10px;animation:spin .7s linear infinite;}
+#auth-screen{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;}
+.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px 24px;max-width:400px;width:100%;}
+.auth-box h2{font-size:22px;font-weight:900;color:var(--bright);margin-bottom:6px;}
+.auth-box p{font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:24px;}
+.fg{margin-bottom:13px;}
+.fg label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#4fc3f7;margin-bottom:5px;}
+.fg input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--bright);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .15s;}
+.fg input:focus{border-color:#4fc3f7;}
+.btn-main{width:100%;padding:12px;background:#4fc3f7;border:none;border-radius:9px;color:#07090f;font-family:var(--sans);font-size:14px;font-weight:800;cursor:pointer;transition:all .18s;letter-spacing:.3px;}
+.btn-main:hover{background:#6dd0f7;transform:translateY(-1px);}
+.auth-note{font-size:10px;color:var(--dim);margin-top:16px;text-align:center;line-height:1.7;}
+.auth-note a{color:#4fc3f7;text-decoration:none;}
+.err-box{background:rgba(244,67,54,.08);border:1px solid rgba(244,67,54,.25);border-radius:7px;padding:9px 12px;font-size:11px;color:#ef9a9a;margin-top:10px;display:none;}
+.loader{text-align:center;padding:40px 20px;color:var(--dim);font-size:11px;letter-spacing:1px;}
+.loader::before{content:'';display:block;width:26px;height:26px;border:2px solid var(--border);border-top-color:#4fc3f7;border-radius:50%;margin:0 auto 12px;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-
-/* ── ALERTS / EXPORT ── */
-.section-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);padding:12px;margin-bottom:10px;}
-.sc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.sc-title{font-size:13px;font-weight:700;color:var(--bright);}
-.sm-btn{padding:4px 10px;border-radius:7px;font-size:10px;font-weight:700;background:var(--bg3);border:1px solid var(--bord2);color:var(--text2);cursor:pointer;transition:all .15s;font-family:var(--sans);}
-.sm-btn:hover{border-color:var(--c-wind);color:var(--c-wind);}
-.al-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
-.al-row select,.al-row input[type=number]{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:4px 7px;color:var(--bright);font-family:var(--mono);font-size:10px;outline:none;flex:1;min-width:60px;}
-.badge{padding:2px 7px;border-radius:6px;font-size:9px;font-weight:700;}
-.bOK{background:rgba(76,175,80,.12);color:#81c784;border:1px solid rgba(76,175,80,.2);}
-.bWN{background:rgba(255,152,0,.12);color:#ffb74d;border:1px solid rgba(255,152,0,.2);}
-.bAL{background:rgba(244,67,54,.12);color:#ef9a9a;border:1px solid rgba(244,67,54,.2);}
-.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
-.exp-btn{display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:all .15s;color:var(--text);font-family:var(--sans);}
-.exp-btn:hover{border-color:var(--c-wind);color:var(--c-wind);}
-
-/* ── TOAST ── */
-.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg3);border:1px solid var(--bord2);border-radius:9px;padding:9px 16px;font-size:11px;z-index:9999;transition:transform .25s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 6px 24px rgba(0,0,0,.5);}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--bg3);border:1px solid var(--bord2);border-radius:10px;padding:10px 18px;font-size:12px;z-index:9999;transition:transform .25s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 6px 24px rgba(0,0,0,.5);}
 .toast.show{transform:translateX(-50%) translateY(0);}
-.toast.ok{color:var(--c-wind);border-color:rgba(77,208,225,.3);}
+.toast.ok{color:#4fc3f7;border-color:rgba(79,195,247,.3);}
 .toast.err{color:#ef9a9a;border-color:rgba(244,67,54,.3);}
-
-@media(max-width:360px){.rt-chip-val{font-size:17px;}.exp-grid{grid-template-columns:1fr;}}
+.section-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
+.sc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sc-title{font-size:14px;font-weight:700;color:var(--bright);}
+.sm-btn{padding:5px 11px;border-radius:8px;font-size:11px;font-weight:600;background:var(--bg3);border:1px solid var(--bord2);color:var(--text2);cursor:pointer;transition:all .15s;font-family:var(--sans);}
+.sm-btn:hover{border-color:#4fc3f7;color:#4fc3f7;}
+.alert-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;}
+.alert-row select,.alert-row input[type=number]{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--bright);font-family:var(--mono);font-size:11px;outline:none;flex:1;min-width:65px;}
+.badge{padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;}
+.bOK{background:rgba(76,175,80,.12);color:#81c784;border:1px solid rgba(76,175,80,.25);}
+.bWN{background:rgba(255,152,0,.12);color:#ffb74d;border:1px solid rgba(255,152,0,.25);}
+.bAL{background:rgba(244,67,54,.12);color:#ef9a9a;border:1px solid rgba(244,67,54,.25);}
+.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;}
+.exp-btn{display:flex;align-items:center;gap:9px;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;color:var(--text);font-family:var(--sans);}
+.exp-btn:hover{border-color:#4fc3f7;color:#4fc3f7;}
+@media(max-width:400px){.rt-val-num{font-size:22px;}.exp-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
-
 <div id="auth-screen" style="display:none">
   <div class="auth-box">
-    <h2>ATMOSTAT</h2>
-    <p>Identifiants Netatmo Developer pour accéder à votre station météo personnelle.</p>
+    <h2>Connexion</h2>
+    <p>Identifiants Netatmo Developer pour accéder à votre station.</p>
     <div class="fg"><label>Client ID</label><input type="text" id="inp-cid" placeholder="na_client_id_..."></div>
     <div class="fg"><label>Client Secret</label><input type="password" id="inp-csec" placeholder="na_client_secret_..."></div>
     <button class="btn-main" onclick="startAuth()">Se connecter →</button>
     <div class="err-box" id="auth-err"></div>
-    <p class="auth-note">Redirect URI à déclarer sur <a href="https://dev.netatmo.com/apps" target="_blank">dev.netatmo.com</a> :<br><strong id="redir-uri"></strong></p>
+    <p class="auth-note">Redirect URI : <strong id="redir-uri" style="color:var(--text2)"></strong><br>
+    À déclarer sur <a href="https://dev.netatmo.com/apps" target="_blank">dev.netatmo.com</a></p>
   </div>
 </div>
-
-<div id="topbar" style="display:none">
+<div id="header" style="display:none">
   <div class="logo">
-    <div class="logo-mark">⛅</div>
-    <div class="logo-name">ATMOSTAT</div>
+    <div class="logo-dot">⛅</div>
+    <div><div class="logo-txt">ATMOSTAT</div><div class="logo-ver">v3</div></div>
   </div>
-  <div class="lieu-tabs" id="lieu-tabs"></div>
-  <div class="spacer"></div>
-  <button class="hdr-btn" onclick="refreshAll()" title="Actualiser">↻</button>
-  <button class="hdr-btn" onclick="logout()" title="Déconnexion">⏻</button>
-</div>
-
-<div id="shortcut-bar" style="display:none"></div>
-
-<div id="period-bar" style="display:none">
-  <button class="per-btn" data-h="0.5" onclick="setPer(this)">30min</button>
-  <button class="per-btn" data-h="1" onclick="setPer(this)">1h</button>
-  <button class="per-btn" data-h="6" onclick="setPer(this)">6h</button>
-  <button class="per-btn" data-h="12" onclick="setPer(this)">12h</button>
-  <button class="per-btn active" data-h="24" onclick="setPer(this)">24h</button>
-  <button class="per-btn" data-h="168" onclick="setPer(this)">7j</button>
-  <button class="per-btn" data-h="720" onclick="setPer(this)">30j</button>
-  <button class="per-btn" data-h="2160" onclick="setPer(this)">3M</button>
-  <button class="per-btn" data-h="8760" onclick="setPer(this)">1an</button>
-  <div class="per-sep"></div>
-  <button class="per-btn" onclick="togCal()" style="font-size:12px">📅</button>
-  <div class="cal-row" id="cal-row">
-    <span style="font-size:9px;color:var(--dim)">Du</span>
-    <input type="date" id="cal-from">
-    <span style="font-size:9px;color:var(--dim)">au</span>
-    <input type="date" id="cal-to">
-    <button class="cal-apply" onclick="appCal()">OK</button>
+  <div id="lieu-bar"></div>
+  <div class="hdr-actions">
+    <button class="icon-btn" onclick="refreshAll()" title="Actualiser">↻</button>
+    <button class="icon-btn" onclick="logout()" title="Déconnexion">⏻</button>
   </div>
 </div>
-
+<div id="module-tabs" style="display:none"></div>
 <div id="main" style="display:none"></div>
-
 <div class="toast" id="toast"></div>
-
 <script>
-// ═══════════════════════════════════════
-// CONFIG & STATE
-// ═══════════════════════════════════════
 const REDIRECT=location.href.split('?')[0].split('#')[0];
+const AUTH_URL='https://api.netatmo.com/oauth2/authorize';
+const TOKEN_URL='https://api.netatmo.com/oauth2/token';
+const API='https://api.netatmo.com/api';
 document.getElementById('redir-uri').textContent=REDIRECT;
 
+const BEAUFORT=[[0.5,'Calme'],[1.5,'Très légère brise'],[3.3,'Légère brise'],[5.5,'Petite brise'],[7.9,'Jolie brise'],[10.7,'Brise fraîche'],[13.8,'Vent frais'],[17,'Grand frais'],[20.7,'Coup de vent'],[24.4,'Fort coup de vent'],[28.4,'Tempête'],[32.6,'Violente tempête'],[999,'Ouragan']];
+function beaufort(kmh){const ms=kmh/3.6;for(let i=0;i<BEAUFORT.length;i++)if(ms<BEAUFORT[i][0])return{bft:i,desc:BEAUFORT[i][1]};return{bft:12,desc:'Ouragan'};}
+function dewPoint(t,h){const a=17.271,b=237.7,g=(a*t)/(b+t)+Math.log(h/100);return(b*g)/(a-g);}
+function windDir(deg){const d=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];return d[Math.round(deg/22.5)%16];}
+
 const S={
-  token:localStorage.getItem('na_tok'),
-  refresh:localStorage.getItem('na_ref'),
-  expiry:+localStorage.getItem('na_exp')||0,
-  cid:localStorage.getItem('na_cid')||'',
-  csec:localStorage.getItem('na_csec')||'',
-  devices:[],lieu:0,
-  charts:{},chartData:{},
+  token:localStorage.getItem('na_tok'),refresh:localStorage.getItem('na_ref'),
+  expiry:+localStorage.getItem('na_exp')||0,cid:localStorage.getItem('na_cid')||'',
+  csec:localStorage.getItem('na_csec')||'',devices:[],currentLieu:0,
+  currentMods:[],charts:{},chartData:{},
   alerts:JSON.parse(localStorage.getItem('na_alerts')||'[]'),
-  stats:{min:false,max:false,avg:false},
-  hours:24,customFrom:null,customTo:null,
+  stats:{min:false,max:false,avg:false},hours:24,customFrom:null,customTo:null,
 };
 if(S.cid)document.getElementById('inp-cid').value=S.cid;
 
-// ── BEAUFORT & HELPERS ──
-const BFT=[[0.5,'Calme'],[1.5,'Très légère brise'],[3.3,'Légère brise'],[5.5,'Petite brise'],[7.9,'Jolie brise'],[10.7,'Brise fraîche'],[13.8,'Vent frais'],[17,'Grand frais'],[20.7,'Coup de vent'],[24.4,'Fort coup de vent'],[28.4,'Tempête'],[32.6,'Violente tempête'],[999,'Ouragan']];
-function beaufort(kmh){const ms=kmh/3.6;for(let i=0;i<BFT.length;i++)if(ms<BFT[i][0])return{bft:i,desc:BFT[i][1]};return{bft:12,desc:'Ouragan'};}
-function dewPoint(t,h){const a=17.271,b=237.7,g=(a*t)/(b+t)+Math.log(h/100);return(b*g)/(a-g);}
-function windDir(deg){return['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'][Math.round(deg/22.5)%16];}
-function tCol(t){if(typeof t!=='number')return'var(--bright)';if(t<0)return'#90caf9';if(t<10)return'#4fc3f7';if(t<20)return'#a5d86e';if(t<30)return'#ffa94d';return'#ff6b6b';}
-function co2Q(v){if(v<800)return{l:'Bon',s:'background:rgba(76,175,80,.15);color:#81c784'};if(v<1200)return{l:'Moyen',s:'background:rgba(255,152,0,.15);color:#ffb74d'};return{l:'Mauvais',s:'background:rgba(244,67,54,.15);color:#ef9a9a'};}
-function fmtSync(u){if(!u)return'—';const d=new Date(u*1000),diff=Math.round((Date.now()-d)/60000);if(diff<1)return'À l\'instant';if(diff<60)return`Il y a ${diff}min`;return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
-
-// ═══════════════════════════════════════
-// AUTH
-// ═══════════════════════════════════════
 function startAuth(){
-  const cid=document.getElementById('inp-cid').value.trim(),csec=document.getElementById('inp-csec').value.trim();
-  if(!cid||!csec){document.getElementById('auth-err').textContent='Remplissez les deux champs.';document.getElementById('auth-err').style.display='block';return;}
-  localStorage.setItem('na_cid',cid);localStorage.setItem('na_csec',csec);S.cid=cid;S.csec=csec;
-  location.href='https://api.netatmo.com/oauth2/authorize?'+new URLSearchParams({client_id:cid,redirect_uri:REDIRECT,scope:'read_station',response_type:'code',state:'x'});
+  const cid=document.getElementById('inp-cid').value.trim();
+  const csec=document.getElementById('inp-csec').value.trim();
+  if(!cid||!csec){authErr('Remplissez les deux champs.');return;}
+  localStorage.setItem('na_cid',cid);localStorage.setItem('na_csec',csec);
+  S.cid=cid;S.csec=csec;
+  location.href=AUTH_URL+'?'+new URLSearchParams({client_id:cid,redirect_uri:REDIRECT,scope:'read_station',response_type:'code',state:'x'});
 }
 async function handleCode(){
-  const code=new URLSearchParams(location.search).get('code');if(!code)return false;
+  const p=new URLSearchParams(location.search),code=p.get('code');
+  if(!code)return false;
   history.replaceState({},'',REDIRECT);
   try{
-    const r=await fetch('https://api.netatmo.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIRECT,client_id:localStorage.getItem('na_cid'),client_secret:localStorage.getItem('na_csec')})});
-    const d=await r.json();if(d.access_token){saveTok(d);return true;}
-    document.getElementById('auth-err').textContent=d.error_description||d.error;document.getElementById('auth-err').style.display='block';return false;
-  }catch(e){document.getElementById('auth-err').textContent=e.message;document.getElementById('auth-err').style.display='block';return false;}
+    const r=await fetch(TOKEN_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIRECT,
+        client_id:localStorage.getItem('na_cid'),client_secret:localStorage.getItem('na_csec')})});
+    const d=await r.json();
+    if(d.access_token){saveTokens(d);return true;}
+    authErr(d.error_description||d.error);return false;
+  }catch(e){authErr(e.message);return false;}
 }
-function saveTok(d){S.token=d.access_token;S.refresh=d.refresh_token;S.expiry=Date.now()+d.expires_in*1000;localStorage.setItem('na_tok',S.token);localStorage.setItem('na_ref',S.refresh);localStorage.setItem('na_exp',S.expiry);}
-async function ensureTok(){
+function saveTokens(d){
+  S.token=d.access_token;S.refresh=d.refresh_token;S.expiry=Date.now()+d.expires_in*1000;
+  localStorage.setItem('na_tok',S.token);localStorage.setItem('na_ref',S.refresh);localStorage.setItem('na_exp',S.expiry);
+}
+async function ensureToken(){
   if(S.token&&Date.now()<S.expiry-60000)return true;
   if(!S.refresh)return false;
-  try{const r=await fetch('https://api.netatmo.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:S.refresh,client_id:S.cid,client_secret:S.csec})});const d=await r.json();if(d.access_token){saveTok(d);return true;}return false;}catch{return false;}
+  try{
+    const r=await fetch(TOKEN_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({grant_type:'refresh_token',refresh_token:S.refresh,client_id:S.cid,client_secret:S.csec})});
+    const d=await r.json();if(d.access_token){saveTokens(d);return true;}return false;
+  }catch{return false;}
 }
 function logout(){['na_tok','na_ref','na_exp'].forEach(k=>localStorage.removeItem(k));S.token=null;location.reload();}
+function authErr(msg){const e=document.getElementById('auth-err');e.textContent=msg;e.style.display='block';}
 
-// ═══════════════════════════════════════
-// API
-// ═══════════════════════════════════════
 async function apiGet(ep,params={}){
-  if(!await ensureTok())throw new Error('Session expirée');
-  const u=new URL('https://api.netatmo.com/api'+ep);
-  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  if(!await ensureToken())throw new Error('Session expirée');
+  const u=new URL(API+ep);Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
   const r=await fetch(u,{headers:{Authorization:'Bearer '+S.token}});
   const d=await r.json();if(d.error)throw new Error(d.error.message||JSON.stringify(d.error));return d;
 }
-function pickScale(hours){if(hours<=1)return'5min';if(hours<=6)return'30min';if(hours<=24)return'1hour';if(hours<=168)return'3hours';if(hours<=720)return'1day';return'1week';}
-function getRange(){if(S.customFrom&&S.customTo)return{from:S.customFrom,to:S.customTo};return{from:Date.now()-S.hours*3600000,to:Date.now()};}
-
 async function getMeasure(deviceId,moduleId,types,from,to,scale){
   const p={device_id:deviceId,scale,type:types.join(','),date_begin:Math.floor(from/1000),date_end:Math.floor(to/1000),optimize:false,real_time:false};
   if(moduleId)p.module_id=moduleId;
-  return(await apiGet('/getmeasure',p)).body;
+  const d=await apiGet('/getmeasure',p);return d.body;
 }
+function pickScale(hours){if(hours<=1)return'5min';if(hours<=6)return'30min';if(hours<=24)return'1hour';if(hours<=168)return'3hours';if(hours<=720)return'1day';return'1week';}
+function getRange(){if(S.customFrom&&S.customTo)return{from:S.customFrom,to:S.customTo};return{from:Date.now()-S.hours*3600000,to:Date.now()};}
+function parseMeasure(raw){return Object.entries(raw).map(([ts,arr])=>{const v=Array.isArray(arr)?arr[0]:arr;return v!=null?{t:parseInt(ts)*1000,v}:null;}).filter(Boolean).sort((a,b)=>a.t-b.t);}
 
-// ═══════════════════════════════════════
-// DATA NORMALIZATION — align to fixed slots
-// ═══════════════════════════════════════
-/**
- * Resample raw Netatmo data onto regular time slots using LTTB + bin averaging.
- * Method:
- *   1. Parse raw {timestamp: [value]} into sorted [{t,v}] array
- *   2. Determine slot interval based on requested period (slotMinutes)
- *   3. Bin all raw points into their slot bucket, compute average per bucket
- *   4. Interpolate missing slots linearly from neighbours (max 2 consecutive gaps)
- * This gives scientifically sound, regularly-spaced time series aligned to
- * clock boundaries (08:00, 08:15, 08:30…) regardless of Netatmo polling jitter.
- */
-function resample(raw, hours){
-  const pts=Object.entries(raw).map(([ts,arr])=>{const v=Array.isArray(arr)?arr[0]:arr;return v!=null?{t:parseInt(ts)*1000,v}:null;}).filter(Boolean).sort((a,b)=>a.t-b.t);
-  if(!pts.length)return[];
-
-  // Choose slot width (minutes) — targets ~150-300 points for readability
-  let slotMin;
-  if(hours<=1)slotMin=5;
-  else if(hours<=6)slotMin=15;
-  else if(hours<=24)slotMin=30;
-  else if(hours<=72)slotMin=60;
-  else if(hours<=168)slotMin=180;
-  else if(hours<=720)slotMin=360;
-  else slotMin=1440;
-
-  const slotMs=slotMin*60000;
-  const{from,to}=getRange();
-
-  // Align start to slot boundary
-  const startSlot=Math.floor(from/slotMs)*slotMs;
-  const endSlot=Math.ceil(to/slotMs)*slotMs;
-
-  // Build buckets
-  const buckets={};
-  pts.forEach(p=>{
-    const slot=Math.floor(p.t/slotMs)*slotMs;
-    if(!buckets[slot])buckets[slot]=[];
-    buckets[slot].push(p.v);
-  });
-
-  // Build regular grid, fill with averages
-  const result=[];
-  for(let t=startSlot;t<=endSlot;t+=slotMs){
-    const b=buckets[t];
-    if(b&&b.length){
-      const avg=b.reduce((a,c)=>a+c,0)/b.length;
-      result.push({t,v:Math.round(avg*10)/10,real:true});
-    }else{
-      result.push({t,v:null,real:false});
-    }
-  }
-
-  // Linear interpolation for small gaps (max 3 consecutive nulls)
-  for(let i=1;i<result.length-1;i++){
-    if(result[i].v!==null)continue;
-    let left=-1,right=-1;
-    for(let j=i-1;j>=0&&i-j<=3;j--){if(result[j].v!==null){left=j;break;}}
-    for(let j=i+1;j<result.length&&j-i<=3;j++){if(result[j].v!==null){right=j;break;}}
-    if(left>=0&&right>=0){
-      const frac=(result[i].t-result[left].t)/(result[right].t-result[left].t);
-      result[i].v=Math.round((result[left].v+(result[right].v-result[left].v)*frac)*10)/10;
-      result[i].interpolated=true;
-    }
-  }
-
-  return result.filter(p=>p.v!==null);
-}
-
-function fmtLbl(t,hours){
-  const d=new Date(t);
-  if(hours<=1)return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  if(hours<=24)return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  if(hours<=72)return d.toLocaleDateString('fr-FR',{weekday:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  if(hours<=168)return d.toLocaleDateString('fr-FR',{weekday:'short',hour:'2-digit'});
-  if(hours<=720)return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
-  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'2-digit'});
-}
-
-// ═══════════════════════════════════════
-// LIEUX
-// ═══════════════════════════════════════
 function getLieux(){
   const map={};
-  S.devices.forEach(d=>{const k=d.place?.city||d.place?.timezone||d.station_name||d._id;if(!map[k])map[k]=[];map[k].push(d);});
+  S.devices.forEach(dev=>{const city=dev.place?.city||dev.place?.timezone||dev.station_name||dev._id;if(!map[city])map[city]=[];map[city].push(dev);});
   return Object.entries(map).map(([name,devs])=>({name,devs}));
 }
-function getMods(lieu){
+function getModules(lieu){
   const mods=[];
   lieu.devs.forEach(dev=>{
-    mods.push({type:'indoor',did:dev._id,mid:null,name:dev.station_name,data:dev.dashboard_data||{},icon:'🏠',id:'mod-'+dev._id+'-main'});
-    (dev.modules||[]).forEach(m=>{
+    mods.push({type:'indoor',deviceId:dev._id,moduleId:null,name:dev.station_name,data:dev.dashboard_data||{},icon:'🏠'});
+    (dev.modules||[]).forEach(mod=>{
       let type='indoor',icon='🏠';
-      if(m.type==='NAModule1'){type='outdoor';icon='🌿';}
-      else if(m.type==='NAModule3'){type='rain';icon='🌧';}
-      else if(m.type==='NAModule2'){type='wind';icon='💨';}
-      mods.push({type,did:dev._id,mid:m._id,name:m.module_name,data:m.dashboard_data||{},icon,id:'mod-'+m._id});
+      if(mod.type==='NAModule1'){type='outdoor';icon='🌿';}
+      else if(mod.type==='NAModule3'){type='rain';icon='🌧';}
+      else if(mod.type==='NAModule2'){type='wind';icon='💨';}
+      mods.push({type,deviceId:dev._id,moduleId:mod._id,name:mod.module_name,data:mod.dashboard_data||{},icon,moduleType:mod.type});
     });
   });
   return mods;
 }
 
-// ═══════════════════════════════════════
-// REFRESH & BUILD
-// ═══════════════════════════════════════
 async function refreshAll(){
   try{
     const d=await apiGet('/getstationsdata');
     S.devices=d.body.devices||[];
     if(!S.devices.length){toast('Aucune station','err');return;}
-    S.mods_by_lieu=getLieux().map(l=>getMods(l));
     buildUI();
   }catch(e){toast('Erreur: '+e.message,'err');}
 }
 
 function buildUI(){
   const lieux=getLieux();
-  // Lieu tabs
-  document.getElementById('lieu-tabs').innerHTML=
-    lieux.map((l,i)=>`<button class="lieu-tab${i===S.lieu?' active':''}" onclick="switchLieu(${i})">${l.name}</button>`).join('');
-  renderLieu(lieux[S.lieu],S.mods_by_lieu[S.lieu]);
+  const lb=document.getElementById('lieu-bar');
+  lb.innerHTML=lieux.map((l,i)=>`<button class="lieu-btn${i===S.currentLieu?' active':''}" onclick="switchLieu(${i})">${l.name}</button>`).join('');
+  renderLieu(lieux[S.currentLieu]);
 }
-
 function switchLieu(i){
-  S.lieu=i;
+  S.currentLieu=i;
   Object.values(S.charts).forEach(c=>{try{c.destroy();}catch{}});
   S.charts={};S.chartData={};
   buildUI();
 }
-
-function renderLieu(lieu,mods){
-  S.currentMods=mods;
-  // shortcuts
-  const sb=document.getElementById('shortcut-bar');
-  sb.innerHTML=mods.map(m=>`<button class="sc-btn" onclick="scrollTo('${m.id}')"><span class="sc-dot" style="background:${modColor(m.type)}"></span>${m.icon} ${m.name}</button>`).join('');
-
-  // main content — all modules stacked
+function renderLieu(lieu){
+  const mods=getModules(lieu);S.currentMods=mods;
+  const tabs=document.getElementById('module-tabs');
+  tabs.innerHTML=mods.map((m,i)=>`<div class="mod-tab${i===0?' active':''}" onclick="switchMod(${i})">${m.icon} ${m.name}</div>`).join('');
   const main=document.getElementById('main');
-  main.innerHTML=mods.map(m=>`<div class="mod-section" id="${m.id}"><div class="loader"></div></div>`).join('');
-
-  // render each module
-  mods.forEach((m,i)=>{
-    const sec=document.getElementById(m.id);
-    if(m.type==='outdoor')renderOutdoor(sec,m);
-    else if(m.type==='rain')renderRain(sec,m);
-    else if(m.type==='wind')renderWind(sec,m);
-    else renderIndoor(sec,m);
-  });
+  main.innerHTML=mods.map((m,i)=>`<div class="page${i===0?' active':''}" id="page-${i}"><div class="loader"></div></div>`).join('');
+  renderModPage(0);
+}
+function switchMod(i){
+  document.querySelectorAll('.mod-tab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  document.querySelectorAll('.page').forEach((p,j)=>p.classList.toggle('active',j===i));
+  renderModPage(i);
+}
+function renderModPage(i){
+  const m=S.currentMods[i];if(!m)return;
+  const page=document.getElementById('page-'+i);
+  if(page.dataset.rendered==='1')return;
+  page.dataset.rendered='1';
+  if(m.type==='outdoor')renderOutdoor(page,m,i);
+  else if(m.type==='rain')renderRain(page,m,i);
+  else if(m.type==='wind')renderWind(page,m,i);
+  else renderIndoor(page,m,i);
 }
 
-function scrollTo(id){
-  const el=document.getElementById(id);
-  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+function periodBarHTML(p){
+  return`<div class="period-wrap" id="${p}-pbar">${[['0.5','30min'],['1','1h'],['6','6h'],['12','12h'],['24','24h'],['168','7j'],['720','30j'],['2160','3M'],['8760','1an']].map(([h,l])=>`<button class="per-btn${h==='24'?' active':''}" data-h="${h}" onclick="setPer(this,'${p}')">${l}</button>`).join('')}<button class="per-btn" style="font-size:13px" onclick="togCal('${p}')">📅</button></div><div class="custom-range" id="${p}-cal" style="display:none"><span style="font-size:10px;color:var(--dim)">De</span><input type="date" id="${p}-from"><span style="font-size:10px;color:var(--dim)">à</span><input type="date" id="${p}-to"><button class="sm-btn" onclick="appCal('${p}')">OK</button></div>`;
 }
-function modColor(type){if(type==='outdoor')return'#a5d86e';if(type==='rain')return'#40c4ff';if(type==='wind')return'#4dd0e1';return'#ff6b6b';}
-
-// ═══════════════════════════════════════
-// PERIOD
-// ═══════════════════════════════════════
-function setPer(btn){
-  document.querySelectorAll('.per-btn').forEach(b=>b.classList.remove('active'));
+function setPer(btn,p){
+  document.querySelectorAll(`#${p}-pbar .per-btn`).forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');S.hours=parseFloat(btn.dataset.h);S.customFrom=null;S.customTo=null;
-  document.getElementById('cal-row').classList.remove('show');
-  reloadAllCharts();
+  document.getElementById(p+'-cal').style.display='none';
+  reloadCharts(p);
 }
-function togCal(){document.getElementById('cal-row').classList.toggle('show');const n=new Date(),w=new Date(n-7*864e5);document.getElementById('cal-to').value=n.toISOString().slice(0,10);document.getElementById('cal-from').value=w.toISOString().slice(0,10);}
-function appCal(){const f=document.getElementById('cal-from').value,t=document.getElementById('cal-to').value;if(!f||!t){toast('Sélectionnez les dates','err');return;}S.customFrom=new Date(f).getTime();S.customTo=new Date(t).getTime()+86399000;S.hours=null;document.getElementById('cal-row').classList.remove('show');reloadAllCharts();}
-function reloadAllCharts(){
-  if(!S.currentMods)return;
-  Object.values(S.charts).forEach(c=>{try{c.destroy();}catch{}});
-  S.charts={};S.chartData={};
-  S.currentMods.forEach(m=>{
-    const sec=document.getElementById(m.id);if(!sec)return;
-    // only reload chart part
-    sec.querySelectorAll('.chart-card').forEach(cc=>cc.remove());
-    if(m.type==='outdoor')appendOutdoorChart(sec,m);
-    else if(m.type==='rain')appendRainChart(sec,m);
-    else if(m.type==='wind')appendWindChart(sec,m);
-    else appendIndoorChart(sec,m);
-  });
+function togCal(p){const el=document.getElementById(p+'-cal');const show=el.style.display==='none';el.style.display=show?'flex':'none';if(show){const now=new Date(),week=new Date(now-7*864e5);document.getElementById(p+'-to').value=now.toISOString().slice(0,10);document.getElementById(p+'-from').value=week.toISOString().slice(0,10);}}
+function appCal(p){const f=document.getElementById(p+'-from').value,t=document.getElementById(p+'-to').value;if(!f||!t){toast('Sélectionnez les dates','err');return;}S.customFrom=new Date(f).getTime();S.customTo=new Date(t).getTime()+86399000;S.hours=null;reloadCharts(p);}
+function reloadCharts(p){
+  const idx=parseInt(p.replace('mod',''));const page=document.getElementById('page-'+idx);const m=S.currentMods[idx];if(!m)return;
+  page.querySelectorAll('.chart-card canvas').forEach(c=>{if(S.charts[c.id]){S.charts[c.id].destroy();delete S.charts[c.id];}});
+  if(m.type==='outdoor')loadOutdoorChart(page,m,idx);
+  else if(m.type==='rain')loadRainChart(page,m,idx);
+  else if(m.type==='wind')loadWindChart(page,m,idx);
+  else loadIndoorChart(page,m,idx);
 }
 
-// ═══════════════════════════════════════
-// MODULE HEADERS (shared)
-// ═══════════════════════════════════════
-function modHeaderHTML(m){
-  return`<div class="mod-header"><div class="mod-accent" style="background:${modColor(m.type)}"></div><div class="mod-icon">${m.icon}</div><div class="mod-name">${m.name}</div><div class="mod-sync">${fmtSync(m.data.time_utc)}</div></div>`;
+function statTogHTML(p){
+  return`<span class="stat-lbl">Afficher :</span><div class="stog${S.stats.min?' on':''}" style="color:#4fc3f7" onclick="togStat('min','${p}')"><input type="checkbox"${S.stats.min?' checked':''}> Min</div><div class="stog${S.stats.max?' on':''}" style="color:#ff6b6b" onclick="togStat('max','${p}')"><input type="checkbox"${S.stats.max?' checked':''}> Max</div><div class="stog${S.stats.avg?' on':''}" style="color:#ffa94d" onclick="togStat('avg','${p}')"><input type="checkbox"${S.stats.avg?' checked':''}> Moy.</div>`;
+}
+function togStat(key,p){
+  S.stats[key]=!S.stats[key];
+  event.currentTarget.classList.toggle('on',S.stats[key]);
+  event.currentTarget.querySelector('input').checked=S.stats[key];
+  const data=S.chartData[p];if(data&&data.pts)drawLine(p,data.pts,data.cfg,S.hours);
 }
 
-// ═══════════════════════════════════════
 // OUTDOOR
-// ═══════════════════════════════════════
-function renderOutdoor(sec,m){
-  const d=m.data,temp=d.Temperature??null,hum=d.Humidity??null;
-  const dp=temp!==null&&hum!==null?dewPoint(temp,hum).toFixed(1):'—';
-  sec.innerHTML=`
-    ${modHeaderHTML(m)}
-    <div class="rt-row">
-      <div class="rt-chip" style="--chip-c:${tCol(temp)}">
-        <div><div class="rt-chip-lbl">Température</div><div style="display:flex;align-items:baseline;gap:3px"><span class="rt-chip-val">${temp!==null?temp.toFixed(1):'—'}</span><span class="rt-chip-unit">°C</span></div></div>
+function renderOutdoor(page,m,idx){
+  const d=m.data,p='mod'+idx;
+  const temp=d.Temperature??'—',hum=d.Humidity??'—';
+  const dp=typeof temp==='number'&&typeof hum==='number'?dewPoint(temp,hum).toFixed(1):'—';
+  page.innerHTML=`
+    <div class="rt-card" style="--card-accent:#ff6b6b">
+      <div class="rt-card-header"><div class="rt-card-name">🌿 ${m.name}</div><div class="rt-card-sync">${fmtSync(d.time_utc)}</div></div>
+      <div class="rt-values">
+        <div class="rt-val-item"><div class="rt-val-row"><span class="rt-val-label">Température</span><div class="rt-val-main"><span class="rt-val-num" style="color:${tCol(temp)}">${typeof temp==='number'?temp.toFixed(1):temp}</span><span class="rt-val-unit">°C</span></div></div></div>
+        <div class="rt-val-item"><div class="rt-val-row"><span class="rt-val-label">Humidité</span><div class="rt-val-main"><span class="rt-val-num" style="color:var(--c1)">${hum}</span><span class="rt-val-unit">%</span></div></div></div>
+        <div class="rt-val-item"><div class="rt-val-row"><span class="rt-val-label">Point de rosée</span><div class="rt-val-main"><span class="rt-val-num" style="color:var(--c8)">${dp}</span><span class="rt-val-unit">°C</span></div></div></div>
       </div>
-      <div class="rt-chip" style="--chip-c:var(--c-hum)">
-        <div><div class="rt-chip-lbl">Humidité</div><div style="display:flex;align-items:baseline;gap:3px"><span class="rt-chip-val">${hum??'—'}</span><span class="rt-chip-unit">%</span></div></div>
-      </div>
-      <div class="rt-chip" style="--chip-c:var(--c-dew)">
-        <div><div class="rt-chip-lbl">Pt rosée</div><div style="display:flex;align-items:baseline;gap:3px"><span class="rt-chip-val">${dp}</span><span class="rt-chip-unit">°C</span></div></div>
-      </div>
-    </div>`;
-  appendOutdoorChart(sec,m);
-  appendAlerts(sec,m.id);
-  appendExport(sec,m.id);
-}
-
-function appendOutdoorChart(sec,m){
-  const pid=m.id,hours=S.hours||24;
-  const cc=document.createElement('div');cc.className='chart-card';
-  cc.innerHTML=`
-    <div class="chart-controls">
-      <button class="ct-btn active" style="background:var(--c-temp)" data-s="Temperature" data-c="var(--c-temp)" onclick="selOutTab(this,'${pid}')">🌡 Temp.</button>
-      <button class="ct-btn" data-s="Humidity" data-c="var(--c-hum)" onclick="selOutTab(this,'${pid}')">💧 Humidité</button>
-      <button class="ct-btn" data-s="dewpoint" data-c="var(--c-dew)" onclick="selOutTab(this,'${pid}')">🌫 Rosée</button>
-      <div class="ctrl-sep"></div>
-      <div class="stog${S.stats.min?' on':''}" style="color:var(--c-hum)" onclick="togStat('min','${pid}')"><input type="checkbox"${S.stats.min?' checked':''}> Min</div>
-      <div class="stog${S.stats.max?' on':''}" style="color:var(--c-temp)" onclick="togStat('max','${pid}')"><input type="checkbox"${S.stats.max?' checked':''}> Max</div>
-      <div class="stog${S.stats.avg?' on':''}" style="color:var(--c-co2)" onclick="togStat('avg','${pid}')"><input type="checkbox"${S.stats.avg?' checked':''}> Moy</div>
     </div>
-    <div class="chart-sum" id="${pid}-sum"><span style="color:var(--dim);font-size:10px">Chargement...</span></div>
-    <div class="chart-wrap"><canvas id="${pid}-chart"></canvas></div>`;
-  sec.appendChild(cc);
-  loadOutChart(m,pid);
+    ${periodBarHTML(p)}
+    <div class="stat-row">${statTogHTML(p)}</div>
+    <div class="chart-card">
+      <div class="chart-tabs">
+        <button class="ct-btn active" style="background:#ff6b6b" data-s="Temperature" data-c="#ff6b6b" onclick="selTab(this,'${p}')">🌡 Temp.</button>
+        <button class="ct-btn" data-s="Humidity" data-c="#4fc3f7" onclick="selTab(this,'${p}')">💧 Humidité</button>
+        <button class="ct-btn" data-s="dewpoint" data-c="#f48fb1" onclick="selTab(this,'${p}')">🌫 Rosée</button>
+      </div>
+      <div class="chart-wrap"><canvas id="${p}-chart"></canvas></div>
+      <div class="chart-summary" id="${p}-sum"></div>
+    </div>
+    ${alertsHTML(p)}${exportHTML(p)}`;
+  loadOutdoorChart(page,m,idx);renderAlerts(p);
 }
-
-async function loadOutChart(m,pid){
-  const cc=document.querySelector(`#${pid} .chart-card`);
-  const active=cc?.querySelector('.ct-btn.active');
-  const sensor=active?.dataset.s||'Temperature';
-  const cfgMap={Temperature:{label:'Température',unit:'°C',color:'var(--c-temp)'},Humidity:{label:'Humidité',unit:'%',color:'var(--c-hum)'},dewpoint:{label:'Pt de rosée',unit:'°C',color:'var(--c-dew)'}};
-  const cfg=cfgMap[sensor];
-  const{from,to}=getRange(),hours=S.hours||(to-from)/3600000;
+async function loadOutdoorChart(page,m,idx){
+  const p='mod'+idx,active=page.querySelector('.ct-btn.active');
+  const sensor=active?.dataset.s||'Temperature',color=active?.dataset.c||'#ff6b6b';
+  const cfgs={Temperature:{label:'Température',unit:'°C'},Humidity:{label:'Humidité',unit:'%'},dewpoint:{label:'Point de rosée',unit:'°C'}};
+  const cfg={...cfgs[sensor],color};
+  const{from,to}=getRange(),hours=S.hours||(to-from)/3600000,scale=pickScale(hours);
   try{
     let pts;
     if(sensor==='dewpoint'){
-      const raw=await getMeasure(m.did,m.mid,['Temperature','Humidity'],from,to,pickScale(hours));
+      const raw=await getMeasure(m.deviceId,m.moduleId,['Temperature','Humidity'],from,to,scale);
       pts=Object.entries(raw).map(([ts,arr])=>{if(!Array.isArray(arr)||arr[0]==null||arr[1]==null)return null;return{t:parseInt(ts)*1000,v:dewPoint(arr[0],arr[1])};}).filter(Boolean).sort((a,b)=>a.t-b.t);
-      // resample dewpoint series
-      const fakeRaw={};pts.forEach(p=>{fakeRaw[Math.floor(p.t/1000)]=[p.v];});
-      pts=resample(fakeRaw,hours);
     }else{
-      const raw=await getMeasure(m.did,m.mid,[sensor],from,to,pickScale(hours));
-      pts=resample(raw,hours);
+      const raw=await getMeasure(m.deviceId,m.moduleId,[sensor],from,to,scale);pts=parseMeasure(raw);
     }
-    S.chartData[pid]={pts,cfg,m,sensor};
-    drawLine(pid,pts,cfg,hours);
+    S.chartData[p]={pts,cfg};drawLine(p,pts,cfg,hours);
   }catch(e){toast('Erreur: '+e.message,'err');}
 }
 
-function selOutTab(btn,pid){
-  btn.closest('.chart-controls').querySelectorAll('.ct-btn').forEach(b=>{b.classList.remove('active');b.style.background='';});
-  btn.classList.add('active');btn.style.background=btn.dataset.c;
-  if(S.charts[pid+'-chart']){S.charts[pid+'-chart'].destroy();delete S.charts[pid+'-chart'];}
-  const m=S.currentMods.find(x=>x.id===pid);if(m)loadOutChart(m,pid);
-}
-
-// ═══════════════════════════════════════
 // INDOOR
-// ═══════════════════════════════════════
-function renderIndoor(sec,m){
-  const d=m.data;
+function renderIndoor(page,m,idx){
+  const d=m.data,p='mod'+idx;
   const sensors=[
-    {k:'Temperature',l:'Température',u:'°C',c:'var(--c-temp)',f:v=>v.toFixed(1)},
-    {k:'Humidity',l:'Humidité',u:'%',c:'var(--c-hum)',f:v=>v},
-    ...(d.Pressure!=null?[{k:'Pressure',l:'Pression',u:'hPa',c:'var(--c-pres)',f:v=>v.toFixed(1)}]:[]),
-    ...(d.Noise!=null?[{k:'Noise',l:'Bruit',u:'dB',c:'var(--c-noise)',f:v=>v}]:[]),
-    ...(d.CO2!=null?[{k:'CO2',l:'CO₂',u:'ppm',c:'var(--c-co2)',f:v=>v,q:true}]:[]),
+    {k:'Temperature',l:'Température',u:'°C',c:'#ff6b6b',f:v=>v.toFixed(1)},
+    {k:'Humidity',l:'Humidité',u:'%',c:'#4fc3f7',f:v=>v},
+    ...(d.Pressure!=null?[{k:'Pressure',l:'Pression',u:'hPa',c:'#aed581',f:v=>v.toFixed(1)}]:[]),
+    ...(d.Noise!=null?[{k:'Noise',l:'Bruit',u:'dB',c:'#ce93d8',f:v=>v}]:[]),
+    ...(d.CO2!=null?[{k:'CO2',l:'CO₂',u:'ppm',c:'#ffa94d',f:v=>v}]:[]),
   ];
-  sec.innerHTML=`
-    ${modHeaderHTML(m)}
-    <div class="rt-row">
-      ${sensors.map(s=>{
-        const v=d[s.k];if(v==null)return'';
-        const q=s.q?co2Q(v):null;
-        return`<div class="rt-chip" style="--chip-c:${s.c}">
-          <div>
-            <div class="rt-chip-lbl">${s.l}${q?`<span class="rt-chip-badge" style="${q.s}">${q.l}</span>`:''}</div>
-            <div style="display:flex;align-items:baseline;gap:3px"><span class="rt-chip-val">${s.f(v)}</span><span class="rt-chip-unit">${s.u}</span></div>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  appendIndoorChart(sec,m);
-  appendAlerts(sec,m.id);
-  appendExport(sec,m.id);
-}
-
-function appendIndoorChart(sec,m){
-  const d=m.data,pid=m.id;
-  const sensors=[
-    {k:'Temperature',l:'Temp.',u:'°C',c:'var(--c-temp)'},
-    {k:'Humidity',l:'Humidité',u:'%',c:'var(--c-hum)'},
-    ...(d.Pressure!=null?[{k:'Pressure',l:'Pression',u:'hPa',c:'var(--c-pres)'}]:[]),
-    ...(d.Noise!=null?[{k:'Noise',l:'Bruit',u:'dB',c:'var(--c-noise)'}]:[]),
-    ...(d.CO2!=null?[{k:'CO2',l:'CO₂',u:'ppm',c:'var(--c-co2)'}]:[]),
-  ];
-  const cc=document.createElement('div');cc.className='chart-card';
-  cc.innerHTML=`
-    <div class="chart-controls">
-      ${sensors.map((s,i)=>`<button class="ct-btn${i===0?' active':''}" style="${i===0?'background:'+s.c:''}" data-s="${s.k}" data-c="${s.c}" onclick="selInTab(this,'${pid}')">${s.l}</button>`).join('')}
-      <div class="ctrl-sep"></div>
-      <div class="stog${S.stats.min?' on':''}" style="color:var(--c-hum)" onclick="togStat('min','${pid}')"><input type="checkbox"${S.stats.min?' checked':''}> Min</div>
-      <div class="stog${S.stats.max?' on':''}" style="color:var(--c-temp)" onclick="togStat('max','${pid}')"><input type="checkbox"${S.stats.max?' checked':''}> Max</div>
-      <div class="stog${S.stats.avg?' on':''}" style="color:var(--c-co2)" onclick="togStat('avg','${pid}')"><input type="checkbox"${S.stats.avg?' checked':''}> Moy</div>
+  page.innerHTML=`
+    <div class="rt-card" style="--card-accent:${sensors[0]?.c||'#4fc3f7'}">
+      <div class="rt-card-header"><div class="rt-card-name">🏠 ${m.name}</div><div class="rt-card-sync">${fmtSync(d.time_utc)}</div></div>
+      <div class="rt-values">
+        ${sensors.map(s=>{const v=d[s.k];if(v==null)return'';const q=s.k==='CO2'?co2Q(v):'';
+          return`<div class="rt-val-item"><div class="rt-val-row"><span class="rt-val-label">${s.l}</span><div style="display:flex;align-items:baseline;gap:8px">${q?`<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;${q.style}">${q.label}</span>`:''}<div class="rt-val-main"><span class="rt-val-num" style="color:${s.c}">${s.f(v)}</span><span class="rt-val-unit">${s.u}</span></div></div></div></div>`;
+        }).join('')}
+      </div>
     </div>
-    <div class="chart-sum" id="${pid}-sum"><span style="color:var(--dim);font-size:10px">Chargement...</span></div>
-    <div class="chart-wrap"><canvas id="${pid}-chart"></canvas></div>`;
-  sec.appendChild(cc);
-  loadInChart(m,pid);
+    ${periodBarHTML(p)}
+    <div class="stat-row">${statTogHTML(p)}</div>
+    <div class="chart-card">
+      <div class="chart-tabs">
+        ${sensors.map((s,i)=>`<button class="ct-btn${i===0?' active':''}" style="${i===0?'background:'+s.c:''}" data-s="${s.k}" data-c="${s.c}" onclick="selTab(this,'${p}')">${s.l}</button>`).join('')}
+      </div>
+      <div class="chart-wrap"><canvas id="${p}-chart"></canvas></div>
+      <div class="chart-summary" id="${p}-sum"></div>
+    </div>
+    ${alertsHTML(p)}${exportHTML(p)}`;
+  loadIndoorChart(page,m,idx);renderAlerts(p);
 }
-
-async function loadInChart(m,pid){
-  const cc=document.querySelector(`#${pid} .chart-card`);
-  const active=cc?.querySelector('.ct-btn.active');
-  const sensor=active?.dataset.s||'Temperature',color=active?.dataset.c||'var(--c-temp)';
+async function loadIndoorChart(page,m,idx){
+  const p='mod'+idx,active=page.querySelector('.ct-btn.active');
+  const sensor=active?.dataset.s||'Temperature',color=active?.dataset.c||'#ff6b6b';
   const labels={Temperature:'Température',Humidity:'Humidité',Pressure:'Pression',Noise:'Bruit',CO2:'CO₂'};
   const units={Temperature:'°C',Humidity:'%',Pressure:'hPa',Noise:'dB',CO2:'ppm'};
   const cfg={label:labels[sensor],unit:units[sensor],color};
   const{from,to}=getRange(),hours=S.hours||(to-from)/3600000;
-  try{
-    const raw=await getMeasure(m.did,m.mid,[sensor],from,to,pickScale(hours));
-    const pts=resample(raw,hours);
-    S.chartData[pid]={pts,cfg,m,sensor};
-    drawLine(pid,pts,cfg,hours);
-  }catch(e){toast('Erreur: '+e.message,'err');}
+  try{const raw=await getMeasure(m.deviceId,m.moduleId,[sensor],from,to,pickScale(hours));const pts=parseMeasure(raw);S.chartData[p]={pts,cfg};drawLine(p,pts,cfg,hours);}
+  catch(e){toast('Erreur: '+e.message,'err');}
+}
+function selTab(btn,p){
+  const idx=parseInt(p.replace('mod',''));const page=document.getElementById('page-'+idx);
+  page.querySelectorAll('.ct-btn').forEach(b=>{b.classList.remove('active');b.style.background='';});
+  btn.classList.add('active');btn.style.background=btn.dataset.c||'#4fc3f7';
+  if(S.charts[p+'-chart']){S.charts[p+'-chart'].destroy();delete S.charts[p+'-chart'];}
+  const m=S.currentMods[idx];
+  if(m.type==='outdoor')loadOutdoorChart(page,m,idx);else loadIndoorChart(page,m,idx);
 }
 
-function selInTab(btn,pid){
-  btn.closest('.chart-controls').querySelectorAll('.ct-btn').forEach(b=>{b.classList.remove('active');b.style.background='';});
-  btn.classList.add('active');btn.style.background=btn.dataset.c;
-  if(S.charts[pid+'-chart']){S.charts[pid+'-chart'].destroy();delete S.charts[pid+'-chart'];}
-  const m=S.currentMods.find(x=>x.id===pid);if(m)loadInChart(m,pid);
-}
-
-// ═══════════════════════════════════════
 // RAIN
-// ═══════════════════════════════════════
-function renderRain(sec,m){
-  const d=m.data;
-  sec.innerHTML=`
-    ${modHeaderHTML(m)}
-    <div class="rain-row">
-      <div class="rain-tile"><div class="rt-lbl">Instantané</div><div class="rt-val">${d.Rain!=null?d.Rain.toFixed(1):'—'}</div><div class="rt-unit">mm/h</div></div>
-      <div class="rain-tile"><div class="rt-lbl">Auj.</div><div class="rt-val">${d.sum_rain_24!=null?d.sum_rain_24.toFixed(1):'—'}</div><div class="rt-unit">mm</div></div>
-      <div class="rain-tile"><div class="rt-lbl">7 jours</div><div class="rt-val">${d.sum_rain_1!=null?d.sum_rain_1.toFixed(1):'—'}</div><div class="rt-unit">mm</div></div>
-    </div>`;
-  appendRainChart(sec,m);
-  appendExport(sec,m.id);
-}
-
-function appendRainChart(sec,m){
-  const pid=m.id;
-  const cc=document.createElement('div');cc.className='chart-card';
-  cc.innerHTML=`
-    <div class="chart-controls">
-      <button class="ct-btn active" style="background:var(--c-rain)" data-t="rate" onclick="selRainTab(this,'${pid}')">Intensité</button>
-      <button class="ct-btn" data-t="daily" onclick="selRainTab(this,'${pid}')">Histogramme 30j</button>
-      <button class="ct-btn" data-t="cumul" onclick="selRainTab(this,'${pid}')">Cumul</button>
+function renderRain(page,m,idx){
+  const d=m.data,p='mod'+idx;
+  page.innerHTML=`
+    <div class="rt-card" style="--card-accent:#4dd0e1">
+      <div class="rt-card-header"><div class="rt-card-name">🌧 ${m.name}</div><div class="rt-card-sync">${fmtSync(d.time_utc)}</div></div>
+      <div class="rain-tiles">
+        <div class="rain-tile"><div class="rain-tile-label">Instantané</div><div class="rain-tile-val">${d.Rain!=null?d.Rain.toFixed(1):'—'}</div><div class="rain-tile-unit">mm/h</div></div>
+        <div class="rain-tile"><div class="rain-tile-label">Aujourd'hui</div><div class="rain-tile-val">${d.sum_rain_24!=null?d.sum_rain_24.toFixed(1):'—'}</div><div class="rain-tile-unit">mm</div></div>
+        <div class="rain-tile"><div class="rain-tile-label">7 jours</div><div class="rain-tile-val">${d.sum_rain_1!=null?d.sum_rain_1.toFixed(1):'—'}</div><div class="rain-tile-unit">mm</div></div>
+      </div>
     </div>
-    <div class="chart-sum" id="${pid}-sum"><span style="color:var(--dim);font-size:10px">Chargement...</span></div>
-    <div class="chart-wrap"><canvas id="${pid}-chart"></canvas></div>`;
-  sec.appendChild(cc);
-  loadRainChart(m,pid);
+    ${periodBarHTML(p)}
+    <div class="chart-card">
+      <div class="chart-tabs">
+        <button class="ct-btn active" style="background:#4dd0e1" data-t="rate" onclick="selRainTab(this,'${p}',${idx})">Intensité mm/h</button>
+        <button class="ct-btn" data-t="daily" onclick="selRainTab(this,'${p}',${idx})">Histogramme 30j</button>
+        <button class="ct-btn" data-t="cumul" onclick="selRainTab(this,'${p}',${idx})">Cumul</button>
+      </div>
+      <div class="chart-wrap"><canvas id="${p}-chart"></canvas></div>
+      <div class="chart-summary" id="${p}-sum"></div>
+    </div>
+    ${exportHTML(p)}`;
+  loadRainChart(page,m,idx);
 }
-
-async function loadRainChart(m,pid){
-  const cc=document.querySelector(`#${pid} .chart-card`);
-  const t=cc?.querySelector('.ct-btn.active')?.dataset.t||'rate';
+async function loadRainChart(page,m,idx){
+  const p='mod'+idx,active=page.querySelector('.ct-btn.active'),t=active?.dataset.t||'rate';
   const{from,to}=getRange(),hours=S.hours||(to-from)/3600000;
-  const cfg={label:'Pluie',unit:'mm',color:'var(--c-rain)'};
+  const cfg={label:'Pluie',unit:'mm',color:'#4dd0e1'};
   try{
     if(t==='daily'){
-      const raw=await getMeasure(m.did,m.mid,['sum_rain'],Date.now()-30*864e5,Date.now(),'1day');
-      const pts=Object.entries(raw).map(([ts,arr])=>{const v=Array.isArray(arr)?arr[0]:arr;return v!=null?{t:parseInt(ts)*1000,v}:null;}).filter(Boolean).sort((a,b)=>a.t-b.t);
-      S.chartData[pid]={pts,cfg:{...cfg,label:'Pluie journalière'},m};
-      drawBar(pid,pts,{...cfg,label:'Pluie journalière'},720);
+      const raw=await getMeasure(m.deviceId,m.moduleId,['sum_rain'],Date.now()-30*864e5,Date.now(),'1day');
+      const pts=parseMeasure(raw);S.chartData[p]={pts,cfg};drawBar(p,pts,{...cfg,label:'Pluie journalière'},720);
     }else if(t==='cumul'){
-      const raw=await getMeasure(m.did,m.mid,['sum_rain'],from,to,pickScale(hours));
-      const pts=resample(raw,hours);let cum=0;
-      const cumPts=pts.map(p=>({t:p.t,v:Math.round((cum+=p.v)*10)/10}));
-      S.chartData[pid]={pts:cumPts,cfg:{...cfg,label:'Cumul pluie'},m};
-      drawLine(pid,cumPts,{...cfg,label:'Cumul pluie'},hours,true);
+      const raw=await getMeasure(m.deviceId,m.moduleId,['sum_rain'],from,to,pickScale(hours));
+      let cum=0;const pts=parseMeasure(raw).map(r=>{cum+=r.v;return{t:r.t,v:Math.round(cum*10)/10};});
+      S.chartData[p]={pts,cfg:{...cfg,label:'Cumul pluie'}};drawLine(p,pts,{...cfg,label:'Cumul pluie'},hours,true);
     }else{
-      const raw=await getMeasure(m.did,m.mid,['Rain'],from,to,pickScale(hours));
-      const pts=resample(raw,hours);
-      S.chartData[pid]={pts,cfg:{...cfg,unit:'mm/h'},m};
-      drawBar(pid,pts,{...cfg,unit:'mm/h'},hours);
+      const raw=await getMeasure(m.deviceId,m.moduleId,['Rain'],from,to,pickScale(hours));
+      const pts=parseMeasure(raw);S.chartData[p]={pts,cfg:{...cfg,unit:'mm/h'}};drawBar(p,pts,{...cfg,unit:'mm/h'},hours);
     }
   }catch(e){toast('Erreur pluie: '+e.message,'err');}
 }
-
-function selRainTab(btn,pid){
-  btn.closest('.chart-controls').querySelectorAll('.ct-btn').forEach(b=>{b.classList.remove('active');b.style.background='';});
-  btn.classList.add('active');btn.style.background='var(--c-rain)';
-  if(S.charts[pid+'-chart']){S.charts[pid+'-chart'].destroy();delete S.charts[pid+'-chart'];}
-  const m=S.currentMods.find(x=>x.id===pid);if(m)loadRainChart(m,pid);
+function selRainTab(btn,p,idx){
+  const page=document.getElementById('page-'+idx);
+  page.querySelectorAll('.ct-btn').forEach(b=>{b.classList.remove('active');b.style.background='';});
+  btn.classList.add('active');btn.style.background='#4dd0e1';
+  if(S.charts[p+'-chart']){S.charts[p+'-chart'].destroy();delete S.charts[p+'-chart'];}
+  loadRainChart(page,S.currentMods[idx],idx);
 }
 
-// ═══════════════════════════════════════
 // WIND
-// ═══════════════════════════════════════
-function renderWind(sec,m){
-  const d=m.data,wind=d.WindStrength??0,gust=d.GustStrength??0,angle=d.WindAngle??0;
+function renderWind(page,m,idx){
+  const d=m.data,p='mod'+idx;
+  const wind=d.WindStrength??0,gust=d.GustStrength??0,angle=d.WindAngle??0;
   const bft=beaufort(wind),dir=windDir(angle);
-  sec.innerHTML=`
-    ${modHeaderHTML(m)}
-    <div class="rt-row">
-      <div class="wind-chip">
+  page.innerHTML=`
+    <div class="rt-card" style="--card-accent:#80cbc4">
+      <div class="rt-card-header"><div class="rt-card-name">💨 ${m.name}</div><div class="rt-card-sync">${fmtSync(d.time_utc)}</div></div>
+      <div class="wind-block">
         <div class="compass">
-          <div class="c-n">N</div><div class="c-s">S</div><div class="c-e">E</div><div class="c-w">O</div>
-          <div class="c-arrow" style="transform:translateX(-50%) translateY(-100%) rotate(${angle}deg)"></div>
+          <div class="compass-n">N</div><div class="compass-s">S</div><div class="compass-e">E</div><div class="compass-o">O</div>
+          <div class="compass-arrow" style="transform:translateX(-50%) translateY(-100%) rotate(${angle}deg)"></div>
         </div>
-        <div class="wind-info">
-          <div class="wind-info-row"><span class="wi-lbl">Vent moy.</span><span><span class="wi-val" style="color:var(--c-wind)">${wind}</span> <span class="wi-u">km/h · ${bft.bft}Bft</span></span></div>
-          <div class="wind-info-row"><span class="wi-lbl">Rafales</span><span><span class="wi-val" style="color:var(--c-gust)">${gust}</span> <span class="wi-u">km/h</span></span></div>
-          <div class="wind-info-row"><span class="wi-lbl">Direction</span><span style="font-family:var(--mono);font-size:13px;color:var(--bright)">${angle}° (${dir})</span></div>
+        <div class="wind-stats">
+          <div class="wind-stat-row"><span class="ws-label">Vent moy.</span><span><span class="ws-val" style="color:#80cbc4">${wind}</span> <span class="ws-unit">km/h · ${bft.bft} Bft</span></span></div>
+          <div class="wind-stat-row"><span class="ws-label">Rafales</span><span><span class="ws-val" style="color:var(--c7)">${gust}</span> <span class="ws-unit">km/h</span></span></div>
+          <div class="wind-stat-row"><span class="ws-label">Direction</span><span style="font-family:var(--mono);font-size:15px;color:var(--bright)">${angle}° (${dir})</span></div>
         </div>
       </div>
-      <div class="rt-chip" style="--chip-c:var(--c-hum);min-width:120px">
-        <div><div class="rt-chip-lbl">${bft.desc}</div><div style="display:flex;align-items:baseline;gap:3px"><span class="rt-chip-val" style="font-size:16px">${bft.bft}</span><span class="rt-chip-unit">Bft</span></div></div>
-      </div>
-    </div>`;
-  appendWindChart(sec,m);
-  appendExport(sec,m.id);
-}
-
-function appendWindChart(sec,m){
-  const pid=m.id;
-  const cc=document.createElement('div');cc.className='chart-card';
-  cc.innerHTML=`
-    <div class="chart-controls">
-      <button class="ct-btn active" style="background:var(--c-wind)" data-t="dual" onclick="selWindTab(this,'${pid}')">💨 Vent & Rafales</button>
-      <button class="ct-btn" data-t="dir" onclick="selWindTab(this,'${pid}')">🧭 Direction</button>
+      <div style="font-size:11px;color:var(--dim);font-style:italic;padding:6px 0;border-top:1px solid var(--border)">${bft.desc}</div>
     </div>
-    <div class="chart-sum" id="${pid}-sum"><span style="color:var(--dim);font-size:10px">Chargement...</span></div>
-    <div class="chart-wrap"><canvas id="${pid}-chart"></canvas></div>`;
-  sec.appendChild(cc);
-  loadWindChart(m,pid);
+    ${periodBarHTML(p)}
+    <div class="chart-card">
+      <div class="chart-tabs">
+        <button class="ct-btn active" style="background:#80cbc4" data-t="wind" onclick="selWindTab(this,'${p}',${idx})">💨 Vent & Rafales</button>
+        <button class="ct-btn" data-t="dir" onclick="selWindTab(this,'${p}',${idx})">🧭 Direction</button>
+      </div>
+      <div class="chart-wrap"><canvas id="${p}-chart"></canvas></div>
+      <div class="chart-summary" id="${p}-sum"></div>
+    </div>
+    ${exportHTML(p)}`;
+  loadWindChart(page,m,idx);
 }
-
-async function loadWindChart(m,pid){
-  const cc=document.querySelector(`#${pid} .chart-card`);
-  const t=cc?.querySelector('.ct-btn.active')?.dataset.t||'dual';
+async function loadWindChart(page,m,idx){
+  const p='mod'+idx,active=page.querySelector('.ct-btn.active'),t=active?.dataset.t||'wind';
   const{from,to}=getRange(),hours=S.hours||(to-from)/3600000;
   try{
     if(t==='dir'){
-      const raw=await getMeasure(m.did,m.mid,['WindAngle'],from,to,pickScale(hours));
-      const pts=resample(raw,hours);
-      drawLine(pid,pts,{label:'Direction',unit:'°',color:'var(--c-pres)'},hours);
+      const raw=await getMeasure(m.deviceId,m.moduleId,['WindAngle'],from,to,pickScale(hours));
+      drawLine(p,parseMeasure(raw),{label:'Direction',unit:'°',color:'#8ce99a'},hours);
     }else{
       const[rawW,rawG]=await Promise.all([
-        getMeasure(m.did,m.mid,['WindStrength'],from,to,pickScale(hours)),
-        getMeasure(m.did,m.mid,['GustStrength'],from,to,pickScale(hours))
+        getMeasure(m.deviceId,m.moduleId,['WindStrength'],from,to,pickScale(hours)),
+        getMeasure(m.deviceId,m.moduleId,['GustStrength'],from,to,pickScale(hours))
       ]);
-      const pW=resample(rawW,hours),pG=resample(rawG,hours);
-      S.chartData[pid]={pts:pW,cfg:{label:'Vent',unit:'km/h',color:'var(--c-wind)'},m};
-      drawDual(pid,pW,pG,hours);
+      const pW=parseMeasure(rawW),pG=parseMeasure(rawG);
+      S.chartData[p]={pts:pW,cfg:{label:'Vent',unit:'km/h',color:'#80cbc4'}};
+      drawDual(p,pW,pG,hours);
     }
   }catch(e){toast('Erreur vent: '+e.message,'err');}
 }
-
-function selWindTab(btn,pid){
-  btn.closest('.chart-controls').querySelectorAll('.ct-btn').forEach(b=>{b.classList.remove('active');b.style.background='';});
-  btn.classList.add('active');btn.style.background='var(--c-wind)';
-  if(S.charts[pid+'-chart']){S.charts[pid+'-chart'].destroy();delete S.charts[pid+'-chart'];}
-  const m=S.currentMods.find(x=>x.id===pid);if(m)loadWindChart(m,pid);
+function selWindTab(btn,p,idx){
+  const page=document.getElementById('page-'+idx);
+  page.querySelectorAll('.ct-btn').forEach(b=>{b.classList.remove('active');b.style.background='';});
+  btn.classList.add('active');btn.style.background='#80cbc4';
+  if(S.charts[p+'-chart']){S.charts[p+'-chart'].destroy();delete S.charts[p+'-chart'];}
+  loadWindChart(page,S.currentMods[idx],idx);
 }
 
-// ═══════════════════════════════════════
-// CHART RENDERING
-// ═══════════════════════════════════════
-const COPTS={
-  responsive:true,maintainAspectRatio:false,
-  interaction:{intersect:false,mode:'index'},
-  plugins:{
-    legend:{display:false},
-    tooltip:{backgroundColor:'#0e1219',borderColor:'#1d2b38',borderWidth:1,titleColor:'#2e4255',bodyColor:'#deeef8',titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:11}}
-  },
-  scales:{
-    x:{ticks:{color:'#2e4255',font:{family:'JetBrains Mono',size:9},maxTicksLimit:8},grid:{color:'#131820'},border:{color:'#131820'}},
-    y:{ticks:{color:'#2e4255',font:{family:'JetBrains Mono',size:9}},grid:{color:'#131820'},border:{color:'#131820'}},
-  }
-};
+// CHARTS
+const CO={responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f1318',borderColor:'#1e2a38',borderWidth:1,titleColor:'#334a5a',bodyColor:'#e2eff8',titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:12}}},
+  scales:{x:{ticks:{color:'#334a5a',font:{family:'JetBrains Mono',size:9},maxTicksLimit:7},grid:{color:'#1a2030'},border:{color:'#1a2030'}},y:{ticks:{color:'#334a5a',font:{family:'JetBrains Mono',size:9}},grid:{color:'#1a2030'},border:{color:'#1a2030'}}}};
+function fmtL(d,h){if(!h||h<=6)return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});if(h<=24)return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});if(h<=168)return d.toLocaleDateString('fr-FR',{weekday:'short',hour:'2-digit'});if(h<=720)return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'2-digit'});}
 
-// Resolve CSS var to actual color for canvas gradients
-function resolveColor(c){
-  if(!c.startsWith('var('))return c;
-  const name=c.match(/var\(([^)]+)\)/)[1];
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||'#4dd0e1';
-}
-
-function drawLine(pid,pts,cfg,hours,fill=true){
-  const key=pid+'-chart',canvas=document.getElementById(key);if(!canvas)return;
+function drawLine(p,pts,cfg,hours,fill=true){
+  const key=p+'-chart',canvas=document.getElementById(key);if(!canvas)return;
   const ctx=canvas.getContext('2d');if(S.charts[key])S.charts[key].destroy();
-  const col=resolveColor(cfg.color);
-  const gr=ctx.createLinearGradient(0,0,0,190);gr.addColorStop(0,col+'55');gr.addColorStop(1,col+'00');
-  const vals=pts.map(p=>p.v),mn=vals.length?Math.min(...vals):0,mx=vals.length?Math.max(...vals):0,avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;
-  const ds=[{label:cfg.label,data:vals,borderColor:col,backgroundColor:fill?gr:'transparent',borderWidth:1.5,fill,tension:.3,pointRadius:0,pointHoverRadius:4,order:1}];
+  const gr=ctx.createLinearGradient(0,0,0,200);gr.addColorStop(0,cfg.color+'55');gr.addColorStop(1,cfg.color+'00');
+  const vals=pts.map(q=>q.v),mn=vals.length?Math.min(...vals):0,mx=vals.length?Math.max(...vals):0,avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;
+  const ds=[{label:cfg.label,data:vals,borderColor:cfg.color,backgroundColor:fill?gr:'transparent',borderWidth:2,fill,tension:.35,pointRadius:vals.length>400?0:2,pointHoverRadius:5,order:1}];
   if(S.stats.min)ds.push({label:'Min',data:vals.map(()=>mn),borderColor:'#4fc3f7',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false,tension:0,order:2});
   if(S.stats.max)ds.push({label:'Max',data:vals.map(()=>mx),borderColor:'#ff6b6b',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false,tension:0,order:3});
-  if(S.stats.avg)ds.push({label:'Moy',data:vals.map(()=>avg),borderColor:'#ffa94d',borderWidth:1,borderDash:[6,3],pointRadius:0,fill:false,tension:0,order:4});
-  const opts=JSON.parse(JSON.stringify(COPTS));
+  if(S.stats.avg)ds.push({label:'Moy',data:vals.map(()=>avg),borderColor:'#ffa94d',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,tension:0,order:4});
+  const opts=JSON.parse(JSON.stringify(CO));
   opts.plugins.tooltip.callbacks={label:c=>` ${c.dataset.label}: ${typeof c.parsed.y==='number'?c.parsed.y.toFixed(1):c.parsed.y} ${cfg.unit}`};
-  S.charts[key]=new Chart(ctx,{type:'line',data:{labels:pts.map(p=>fmtLbl(p.t,hours)),datasets:ds},options:opts});
-  mkSum(pid,vals,cfg);
+  S.charts[key]=new Chart(ctx,{type:'line',data:{labels:pts.map(q=>fmtL(new Date(q.t),hours)),datasets:ds},options:opts});
+  mkSum(p,vals,cfg);
 }
-
-function drawBar(pid,pts,cfg,hours){
-  const key=pid+'-chart',canvas=document.getElementById(key);if(!canvas)return;
+function drawBar(p,pts,cfg,hours){
+  const key=p+'-chart',canvas=document.getElementById(key);if(!canvas)return;
   const ctx=canvas.getContext('2d');if(S.charts[key])S.charts[key].destroy();
-  const col=resolveColor(cfg.color);
-  const vals=pts.map(p=>p.v);
-  const opts=JSON.parse(JSON.stringify(COPTS));
-  opts.plugins.tooltip.callbacks={label:c=>` ${c.parsed.y.toFixed(1)} ${cfg.unit}`};
-  S.charts[key]=new Chart(ctx,{type:'bar',data:{labels:pts.map(p=>fmtLbl(p.t,hours)),datasets:[{label:cfg.label,data:vals,backgroundColor:col+'99',borderColor:col,borderWidth:1,borderRadius:3}]},options:opts});
-  mkSum(pid,vals,cfg);
+  const vals=pts.map(q=>q.v);
+  const opts=JSON.parse(JSON.stringify(CO));opts.plugins.tooltip.callbacks={label:c=>` ${c.parsed.y.toFixed(1)} ${cfg.unit}`};
+  S.charts[key]=new Chart(ctx,{type:'bar',data:{labels:pts.map(q=>fmtL(new Date(q.t),hours)),datasets:[{label:cfg.label,data:vals,backgroundColor:cfg.color+'88',borderColor:cfg.color,borderWidth:1,borderRadius:3}]},options:opts});
+  mkSum(p,vals,cfg);
 }
-
-function drawDual(pid,pW,pG,hours){
-  const key=pid+'-chart',canvas=document.getElementById(key);if(!canvas)return;
+function drawDual(p,pW,pG,hours){
+  const key=p+'-chart',canvas=document.getElementById(key);if(!canvas)return;
   const ctx=canvas.getContext('2d');if(S.charts[key])S.charts[key].destroy();
-  const col=resolveColor('var(--c-wind)'),colG=resolveColor('var(--c-gust)');
-  const gr=ctx.createLinearGradient(0,0,0,190);gr.addColorStop(0,col+'44');gr.addColorStop(1,col+'00');
-  const opts=JSON.parse(JSON.stringify(COPTS));
-  opts.plugins.legend.display=true;
-  opts.plugins.legend.labels={color:'#7090a8',font:{family:'JetBrains Mono',size:9},boxWidth:10};
+  const gr=ctx.createLinearGradient(0,0,0,200);gr.addColorStop(0,'#80cbc455');gr.addColorStop(1,'#80cbc400');
+  const opts=JSON.parse(JSON.stringify(CO));opts.plugins.legend.display=true;
+  opts.plugins.legend.labels={color:'#7a9ab0',font:{family:'JetBrains Mono',size:10},boxWidth:12};
   opts.plugins.tooltip.callbacks={label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)} km/h`};
-  S.charts[key]=new Chart(ctx,{type:'line',data:{
-    labels:pW.map(p=>fmtLbl(p.t,hours)),
-    datasets:[
-      {label:'Vent moy.',data:pW.map(p=>p.v),borderColor:col,backgroundColor:gr,borderWidth:1.5,fill:true,tension:.3,pointRadius:0},
-      {label:'Rafales',data:pG.map(p=>p.v),borderColor:colG,backgroundColor:'transparent',borderWidth:1.5,fill:false,tension:.3,pointRadius:0,borderDash:[4,3]},
-    ]
-  },options:opts});
-  mkSum(pid,pW.map(p=>p.v),{label:'Vent',unit:'km/h',color:'var(--c-wind)'});
+  S.charts[key]=new Chart(ctx,{type:'line',data:{labels:pW.map(q=>fmtL(new Date(q.t),hours)),datasets:[
+    {label:'Vent moy.',data:pW.map(q=>q.v),borderColor:'#80cbc4',backgroundColor:gr,borderWidth:2,fill:true,tension:.35,pointRadius:0},
+    {label:'Rafales',data:pG.map(q=>q.v),borderColor:'#90caf9',backgroundColor:'transparent',borderWidth:1.5,fill:false,tension:.35,pointRadius:0,borderDash:[4,3]},
+  ]},options:opts});
+  mkSum(p,pW.map(q=>q.v),{label:'Vent',unit:'km/h',color:'#80cbc4'});
 }
-
-function mkSum(pid,vals,cfg){
-  const el=document.getElementById(pid+'-sum');if(!el||!vals.length)return;
+function mkSum(p,vals,cfg){
+  const el=document.getElementById(p+'-sum');if(!el||!vals.length)return;
   const mn=Math.min(...vals),mx=Math.max(...vals),avg=vals.reduce((a,b)=>a+b,0)/vals.length;
-  const col=resolveColor(cfg.color);
-  el.innerHTML=`
-    <div class="cs-item"><span class="cs-k">MIN</span> <span class="cs-v" style="color:#4fc3f7">${mn.toFixed(1)}</span><span style="font-size:9px;color:var(--dim)">${cfg.unit}</span></div>
-    <div class="cs-item"><span class="cs-k">MAX</span> <span class="cs-v" style="color:#ff6b6b">${mx.toFixed(1)}</span><span style="font-size:9px;color:var(--dim)">${cfg.unit}</span></div>
-    <div class="cs-item"><span class="cs-k">MOY</span> <span class="cs-v" style="color:#ffa94d">${avg.toFixed(1)}</span><span style="font-size:9px;color:var(--dim)">${cfg.unit}</span></div>
-    <div class="cs-item"><span class="cs-k">PTS</span> <span class="cs-v" style="color:var(--dim)">${vals.length}</span></div>`;
+  el.innerHTML=`<div class="csum"><div class="csum-v" style="color:#4fc3f7">${mn.toFixed(1)}</div><div class="csum-k">Min ${cfg.unit}</div></div><div class="csum"><div class="csum-v" style="color:#ff6b6b">${mx.toFixed(1)}</div><div class="csum-k">Max ${cfg.unit}</div></div><div class="csum"><div class="csum-v" style="color:#ffa94d">${avg.toFixed(1)}</div><div class="csum-k">Moy ${cfg.unit}</div></div><div class="csum"><div class="csum-v">${vals.length}</div><div class="csum-k">Points</div></div>`;
 }
 
-function togStat(key,pid){
-  S.stats[key]=!S.stats[key];
-  // update all visible stog buttons for this key
-  document.querySelectorAll(`#${pid} .stog`).forEach(el=>{
-    const onclick=el.getAttribute('onclick')||'';
-    if(onclick.includes(`'${key}'`)){el.classList.toggle('on',S.stats[key]);el.querySelector('input').checked=S.stats[key];}
-  });
-  const data=S.chartData[pid];
-  if(data&&data.pts){
-    if(S.charts[pid+'-chart']){S.charts[pid+'-chart'].destroy();delete S.charts[pid+'-chart'];}
-    drawLine(pid,data.pts,data.cfg,S.hours||24);
-  }
-}
-
-// ═══════════════════════════════════════
 // ALERTS
-// ═══════════════════════════════════════
-function appendAlerts(sec,pid){
-  const div=document.createElement('div');div.className='section-card';
-  div.innerHTML=`<div class="sc-hd"><div class="sc-title">⚡ Alertes</div><button class="sm-btn" onclick="addAl('${pid}')">+ Ajouter</button></div><div id="${pid}-alerts"></div><div id="${pid}-alst" style="font-size:10px;margin-top:5px;color:var(--dim)"></div>`;
-  sec.appendChild(div);renderAlerts(pid);
-}
-function renderAlerts(pid){
-  const el=document.getElementById(pid+'-alerts');if(!el)return;
-  const my=S.alerts.filter(a=>a.p===pid);
-  if(!my.length){el.innerHTML='<div style="font-size:10px;color:var(--dim)">Aucune alerte.</div>';return;}
-  el.innerHTML=my.map(a=>{const i=S.alerts.indexOf(a);return`<div class="al-row">
-    <select onchange="updAl(${i},'sensor',this.value)">${[['Temperature','🌡 Temp.'],['Humidity','💧 Hum.'],['CO2','🌿 CO₂'],['Noise','🔊 Bruit'],['Pressure','📊 Pression'],['WindStrength','💨 Vent'],['Rain','🌧 Pluie']].map(([k,l])=>`<option value="${k}"${a.sensor===k?' selected':''}>${l}</option>`).join('')}</select>
-    <select onchange="updAl(${i},'op',this.value)" style="max-width:80px"><option value=">"${a.op==='>'?' selected':''}>&gt; sup.</option><option value="<"${a.op==='<'?' selected':''}>&lt; inf.</option></select>
-    <input type="number" value="${a.threshold}" step="0.1" onchange="updAl(${i},'threshold',parseFloat(this.value))" style="max-width:60px">
-    <span class="badge ${a.status==='danger'?'bAL':a.status==='warning'?'bWN':'bOK'}">${a.status==='danger'?'🔴':a.status==='warning'?'🟡':'🟢'} ${a.status==='danger'?'Alerte':a.status==='warning'?'Proche':'OK'}</span>
-    <button class="hdr-btn" style="flex-shrink:0;width:26px;height:26px" onclick="delAl(${i},'${pid}')">✕</button>
+function alertsHTML(p){return`<div class="section-card"><div class="sc-header"><div class="sc-title">⚡ Alertes</div><button class="sm-btn" onclick="addAl('${p}')">+ Ajouter</button></div><div id="${p}-alerts"></div><div id="${p}-alst" style="font-size:11px;margin-top:6px"></div></div>`;}
+function renderAlerts(p){
+  const el=document.getElementById(p+'-alerts');if(!el)return;
+  const my=S.alerts.filter(a=>a.p===p);
+  if(!my.length){el.innerHTML='<div style="font-size:11px;color:var(--dim);padding:2px 0">Aucune alerte.</div>';return;}
+  el.innerHTML=my.map(a=>{const i=S.alerts.indexOf(a);return`<div class="alert-row">
+    <select onchange="updAl(${i},'sensor',this.value)">
+      ${[['Temperature','🌡 Temp.'],['Humidity','💧 Hum.'],['Pressure','📊 Pression'],['Noise','🔊 Bruit'],['CO2','🌿 CO₂'],['WindStrength','💨 Vent'],['Rain','🌧 Pluie']].map(([k,l])=>`<option value="${k}"${a.sensor===k?' selected':''}>${l}</option>`).join('')}
+    </select>
+    <select onchange="updAl(${i},'op',this.value)" style="max-width:90px">
+      <option value=">"${a.op==='>'?' selected':''}>&gt; sup.</option>
+      <option value="<"${a.op==='<'?' selected':''}>&lt; inf.</option>
+    </select>
+    <input type="number" value="${a.threshold}" step="0.1" onchange="updAl(${i},'threshold',parseFloat(this.value))" style="max-width:65px">
+    <span class="badge ${a.status==='danger'?'bAL':a.status==='warning'?'bWN':'bOK'}">${a.status==='danger'?'🔴 Alerte':a.status==='warning'?'🟡 Proche':'🟢 OK'}</span>
+    <button class="icon-btn" style="flex-shrink:0" onclick="delAl(${i},'${p}')">✕</button>
   </div>`;}).join('');
 }
 function addAl(p){S.alerts.push({p,sensor:'Temperature',op:'>',threshold:30,status:'ok'});saveAl();renderAlerts(p);}
@@ -949,39 +597,30 @@ function updAl(i,k,v){S.alerts[i][k]=v;saveAl();}
 function delAl(i,p){S.alerts.splice(i,1);saveAl();renderAlerts(p);}
 function saveAl(){localStorage.setItem('na_alerts',JSON.stringify(S.alerts));}
 
-// ═══════════════════════════════════════
 // EXPORT
-// ═══════════════════════════════════════
-function appendExport(sec,pid){
-  const div=document.createElement('div');div.className='section-card';
-  div.innerHTML=`<div class="sc-title" style="margin-bottom:8px">📤 Export</div><div class="exp-grid"><button class="exp-btn" onclick="doExp('${pid}','csv')"><span style="font-size:18px">📊</span><span><div style="font-size:11px;font-weight:700">CSV</div><div style="font-size:9px;color:var(--dim)">Excel/Sheets</div></span></button><button class="exp-btn" onclick="doExp('${pid}','json')"><span style="font-size:18px">📋</span><span><div style="font-size:11px;font-weight:700">JSON</div><div style="font-size:9px;color:var(--dim)">Format structuré</div></span></button></div>`;
-  sec.appendChild(div);
-}
-function doExp(pid,fmt){
-  const data=S.chartData[pid];if(!data){toast('Chargez un graphique','err');return;}
-  const{pts,cfg}=data,fname=`netatmo_${(cfg.label||'data').replace(/\s/g,'_')}_${new Date().toISOString().slice(0,10)}`;
-  if(fmt==='csv'){const lines=[`Datetime,${cfg.label} (${cfg.unit}),Timestamp`];pts.forEach(p=>lines.push(`"${new Date(p.t).toLocaleString('fr-FR')}",${p.v},${p.t}`));dl(lines.join('\n'),fname+'.csv','text/csv');toast('CSV exporté ✓');}
-  else{dl(JSON.stringify({label:cfg.label,unit:cfg.unit,exported:new Date().toISOString(),data:pts.map(p=>({datetime:new Date(p.t).toISOString(),value:p.v}))},null,2),fname+'.json','application/json');toast('JSON exporté ✓');}
+function exportHTML(p){return`<div class="section-card"><div class="sc-title">📤 Export</div><div class="exp-grid"><button class="exp-btn" onclick="doExp('${p}','csv')"><span style="font-size:20px">📊</span><span><div style="font-size:12px;font-weight:600">CSV</div><div style="font-size:10px;color:var(--dim)">Pour Excel</div></span></button><button class="exp-btn" onclick="doExp('${p}','json')"><span style="font-size:20px">📋</span><span><div style="font-size:12px;font-weight:600">JSON</div><div style="font-size:10px;color:var(--dim)">Format structuré</div></span></button></div></div>`;}
+function doExp(p,fmt){
+  const data=S.chartData[p];if(!data){toast('Chargez un graphique d\'abord','err');return;}
+  const{pts,cfg}=data,fname=`netatmo_${cfg.label.replace(/\s/g,'_')}_${new Date().toISOString().slice(0,10)}`;
+  if(fmt==='csv'){const lines=[`Datetime,${cfg.label} (${cfg.unit}),Timestamp`];pts.forEach(q=>lines.push(`"${new Date(q.t).toLocaleString('fr-FR')}",${q.v},${q.t}`));dl(lines.join('\n'),fname+'.csv','text/csv');toast('CSV exporté ✓');}
+  else{dl(JSON.stringify({label:cfg.label,unit:cfg.unit,exported:new Date().toISOString(),data:pts.map(q=>({datetime:new Date(q.t).toISOString(),value:q.v}))},null,2),fname+'.json','application/json');toast('JSON exporté ✓');}
 }
 function dl(c,n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click();}
 
-// ═══════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════
+// HELPERS
+function tCol(t){if(typeof t!=='number')return'var(--bright)';if(t<0)return'#90caf9';if(t<10)return'#4fc3f7';if(t<20)return'#aed581';if(t<30)return'#ffa94d';return'#ff6b6b';}
+function co2Q(v){if(v<800)return{label:'Bon',style:'background:rgba(76,175,80,.15);color:#81c784;'};if(v<1200)return{label:'Moyen',style:'background:rgba(255,152,0,.15);color:#ffb74d;'};return{label:'Mauvais',style:'background:rgba(244,67,54,.15);color:#ef9a9a;'};}
+function fmtSync(utc){if(!utc)return'—';const d=new Date(utc*1000),diff=Math.round((Date.now()-d)/60000);if(diff<1)return'À l\'instant';if(diff<60)return`Il y a ${diff} min`;return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
+
 let _tt;
 function toast(msg,type='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast show ${type}`;clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);}
 
-// ═══════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════
+function showAuth(){document.getElementById('auth-screen').style.display='flex';document.getElementById('header').style.display='none';document.getElementById('module-tabs').style.display='none';document.getElementById('main').style.display='none';}
+function showApp(){document.getElementById('auth-screen').style.display='none';document.getElementById('header').style.display='flex';document.getElementById('module-tabs').style.display='flex';document.getElementById('main').style.display='block';}
+
 async function init(){
-  if(location.search.includes('code=')){const ok=await handleCode();if(!ok){document.getElementById('auth-screen').style.display='flex';return;}}
-  if(S.token){
-    ['topbar','shortcut-bar','period-bar','main'].forEach(id=>document.getElementById(id).style.display='');
-    document.getElementById('period-bar').style.display='flex';
-    document.getElementById('shortcut-bar').style.display='flex';
-    try{await refreshAll();}catch(e){toast('Reconnexion nécessaire','err');setTimeout(logout,2000);}
-  }else{document.getElementById('auth-screen').style.display='flex';}
+  if(location.search.includes('code=')){const ok=await handleCode();if(!ok){showAuth();return;}}
+  if(S.token){showApp();try{await refreshAll();}catch(e){toast('Reconnexion nécessaire','err');setTimeout(logout,2000);}}else{showAuth();}
 }
 init();
 </script>
