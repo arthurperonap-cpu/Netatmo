@@ -2,1290 +2,1262 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Netatmo Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ATMOSTAT — Netatmo Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #080c12;
-    --bg2: #0d1520;
-    --bg3: #111d2e;
-    --border: #1e3048;
-    --accent: #3ecfcf;
-    --accent2: #f0a500;
-    --accent3: #e05a7a;
-    --accent4: #6ab04c;
-    --text: #c8dff0;
-    --text-dim: #4a6a88;
-    --text-bright: #e8f4ff;
-    --font-display: 'Syne', sans-serif;
-    --font-mono: 'DM Mono', monospace;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-mono);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ─── BACKGROUND ─── */
-  body::before {
-    content: '';
-    position: fixed; inset: 0; z-index: 0;
-    background:
-      radial-gradient(ellipse 80% 50% at 20% 20%, rgba(62,207,207,0.04) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(240,165,0,0.03) 0%, transparent 60%);
-    pointer-events: none;
-  }
-
-  /* ─── GRID OVERLAY ─── */
-  body::after {
-    content: '';
-    position: fixed; inset: 0; z-index: 0;
-    background-image:
-      linear-gradient(rgba(62,207,207,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(62,207,207,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-  }
-
-  #app { position: relative; z-index: 1; }
-
-  /* ─── HEADER ─── */
-  header {
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    background: rgba(8,12,18,0.8);
-    backdrop-filter: blur(10px);
-    position: sticky; top: 0; z-index: 100;
-  }
-
-  .logo {
-    display: flex; align-items: center; gap: 10px;
-  }
-
-  .logo-icon {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--accent), rgba(62,207,207,0.3));
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-  }
-
-  .logo-text {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: var(--text-bright);
-  }
-
-  .logo-sub {
-    font-size: 10px;
-    color: var(--accent);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    display: block;
-    margin-top: -2px;
-  }
-
-  .header-status {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 11px; color: var(--text-dim);
-  }
-
-  .status-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--text-dim);
-  }
-  .status-dot.online { background: var(--accent4); box-shadow: 0 0 6px var(--accent4); }
-
-  /* ─── AUTH SCREEN ─── */
-  #auth-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - 70px);
-    padding: 24px;
-    text-align: center;
-  }
-
-  .auth-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 36px 28px;
-    max-width: 420px;
-    width: 100%;
-  }
-
-  .auth-title {
-    font-family: var(--font-display);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text-bright);
-    margin-bottom: 8px;
-  }
-
-  .auth-desc {
-    font-size: 12px;
-    color: var(--text-dim);
-    line-height: 1.7;
-    margin-bottom: 28px;
-  }
-
-  .input-group {
-    margin-bottom: 14px;
-    text-align: left;
-  }
-
-  label {
-    display: block;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 6px;
-  }
-
-  input {
-    width: 100%;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 11px 14px;
-    color: var(--text-bright);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  input:focus { border-color: var(--accent); }
-
-  .btn {
-    width: 100%;
-    padding: 13px;
-    background: var(--accent);
-    border: none;
-    border-radius: 8px;
-    color: var(--bg);
-    font-family: var(--font-display);
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: all 0.2s;
-    margin-top: 6px;
-  }
-
-  .btn:hover { background: #5adede; transform: translateY(-1px); }
-  .btn:active { transform: translateY(0); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-  .btn-sm {
-    width: auto;
-    padding: 7px 14px;
-    font-size: 11px;
-    border-radius: 6px;
-  }
-
-  .btn-outline {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-  }
-  .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
-
-  .auth-note {
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-top: 18px;
-    line-height: 1.6;
-  }
-
-  .auth-note a { color: var(--accent); text-decoration: none; }
-
-  /* ─── DASHBOARD ─── */
-  #dashboard { display: none; padding: 20px 16px; max-width: 900px; margin: 0 auto; }
-
-  /* ─── CONTROLS ─── */
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-
-  .period-tabs {
-    display: flex;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .period-tab {
-    padding: 8px 14px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: all 0.15s;
-  }
-
-  .period-tab.active, .period-tab:hover {
-    background: var(--bg3);
-    color: var(--accent);
-  }
-
-  .module-select {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 12px;
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    outline: none;
-    cursor: pointer;
-    flex: 1;
-    min-width: 140px;
-  }
-
-  .module-select:focus { border-color: var(--accent); }
-
-  /* ─── CURRENT CONDITIONS ─── */
-  .conditions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
-    margin-bottom: 22px;
-  }
-
-  .condition-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s, transform 0.2s;
-    cursor: pointer;
-  }
-
-  .condition-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .condition-card.selected { border-color: var(--accent); }
-
-  .condition-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--card-color, var(--accent));
-    opacity: 0.6;
-  }
-
-  .card-label {
-    font-size: 9px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-
-  .card-value {
-    font-family: var(--font-display);
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text-bright);
-    line-height: 1;
-  }
-
-  .card-unit {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
-
-  .card-icon {
-    position: absolute;
-    top: 12px; right: 12px;
-    font-size: 18px;
-    opacity: 0.4;
-  }
-
-  /* ─── CHART AREA ─── */
-  .chart-section {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 18px;
-  }
-
-  .chart-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .chart-title {
-    font-family: var(--font-display);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-bright);
-  }
-
-  .chart-subtitle { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-
-  .measure-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .pill {
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 10px;
-    letter-spacing: 1px;
-    border: 1px solid var(--border);
-    background: var(--bg3);
-    color: var(--text-dim);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .pill.active {
-    color: var(--bg);
-    border-color: transparent;
-  }
-
-  .chart-wrap {
-    position: relative;
-    height: 220px;
-  }
-
-  /* ─── ALERTS ─── */
-  .alerts-section {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 18px;
-  }
-
-  .section-title {
-    font-family: var(--font-display);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-bright);
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .alert-rule {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    background: var(--bg3);
-    border-radius: 8px;
-    margin-bottom: 8px;
-    border: 1px solid var(--border);
-    font-size: 12px;
-    flex-wrap: wrap;
-  }
-
-  .alert-rule select, .alert-rule input[type="number"] {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 5px 8px;
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    width: auto;
-    flex: 1;
-    min-width: 80px;
-  }
-
-  .alert-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: 600;
-  }
-
-  .alert-badge.warning { background: rgba(240,165,0,0.15); color: var(--accent2); border: 1px solid rgba(240,165,0,0.3); }
-  .alert-badge.danger  { background: rgba(224,90,122,0.15); color: var(--accent3); border: 1px solid rgba(224,90,122,0.3); }
-  .alert-badge.ok      { background: rgba(106,176,76,0.15); color: var(--accent4); border: 1px solid rgba(106,176,76,0.3); }
-
-  .btn-icon {
-    width: 28px; height: 28px;
-    border-radius: 6px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    font-size: 14px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
-  }
-
-  .btn-icon:hover { border-color: var(--accent3); color: var(--accent3); }
-
-  /* ─── EXPORT ─── */
-  .export-section {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 18px;
-  }
-
-  .export-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 14px;
-  }
-
-  .export-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 13px 14px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-    color: var(--text);
-    font-family: var(--font-mono);
-  }
-
-  .export-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .export-icon { font-size: 20px; }
-  .export-label { font-size: 12px; }
-  .export-desc { font-size: 10px; color: var(--text-dim); display: block; margin-top: 2px; }
-
-  /* ─── LOADING / ERROR ─── */
-  .loader {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-dim);
-    font-size: 12px;
-  }
-
-  .loader::before {
-    content: '';
-    display: block;
-    width: 32px; height: 32px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    margin: 0 auto 14px;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .error-msg {
-    background: rgba(224,90,122,0.1);
-    border: 1px solid rgba(224,90,122,0.3);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 12px;
-    color: var(--accent3);
-    margin-top: 12px;
-    display: none;
-  }
-
-  .toast {
-    position: fixed;
-    bottom: 24px; left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--bg3);
-    border: 1px solid var(--accent);
-    border-radius: 10px;
-    padding: 12px 20px;
-    font-size: 12px;
-    color: var(--accent);
-    z-index: 999;
-    transition: transform 0.3s;
-    white-space: nowrap;
-  }
-
-  .toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* ─── CONFIG SECTION ─── */
-  .config-section {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 18px;
-  }
-
-  .config-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    gap: 10px;
-  }
-
-  .config-row:last-child { border-bottom: none; }
-  .config-key { color: var(--text-dim); font-size: 11px; letter-spacing: 1px; }
-  .config-val { color: var(--text-bright); font-family: var(--font-mono); font-size: 11px; }
-
-  /* ─── RESPONSIVE ─── */
-  @media (max-width: 500px) {
-    .conditions-grid { grid-template-columns: repeat(2, 1fr); }
-    .export-grid { grid-template-columns: 1fr; }
-    .card-value { font-size: 20px; }
-  }
+:root {
+  --bg:       #07090f;
+  --bg2:      #0c1018;
+  --bg3:      #111622;
+  --bg4:      #16202e;
+  --border:   #1c2a3a;
+  --border2:  #243545;
+  --text:     #8faabb;
+  --text2:    #c4d8e8;
+  --bright:   #e8f2fa;
+  --dim:      #3a5060;
+  --accent:   #00d4aa;
+  --accentB:  #ff6b6b;
+  --accentC:  #ffa94d;
+  --accentD:  #74c0fc;
+  --mono: 'IBM Plex Mono', monospace;
+  --serif: 'Instrument Serif', serif;
+  --r: 10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:13px;
+  min-height:100vh;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* BG texture */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 100% 60% at 10% 0%,rgba(0,212,170,.05) 0%,transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 100%,rgba(116,192,252,.04) 0%,transparent 55%);
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,212,170,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,170,.025) 1px,transparent 1px);
+  background-size:48px 48px;
+}
+#app{position:relative;z-index:1;}
+
+/* ══ SCROLLBAR ══ */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ══ HEADER ══ */
+header{
+  position:sticky;top:0;z-index:200;
+  background:rgba(7,9,15,.92);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 16px;
+  height:56px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,var(--accent),rgba(0,212,170,.25));
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  box-shadow:0 0 16px rgba(0,212,170,.2);
+}
+.logo-name{
+  font-family:var(--serif);font-size:20px;color:var(--bright);
+  letter-spacing:-.3px;line-height:1;
+}
+.logo-tag{font-size:9px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.pill-status{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:20px;
+  background:var(--bg3);border:1px solid var(--border);
+  font-size:10px;color:var(--dim);letter-spacing:.5px;
+}
+.pill-status .dot{width:6px;height:6px;border-radius:50%;background:var(--dim);}
+.pill-status.on .dot{background:var(--accent);box-shadow:0 0 6px var(--accent);}
+.pill-status.on{color:var(--accent);border-color:rgba(0,212,170,.3);}
+
+/* ══ BUTTONS ══ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px 16px;border-radius:var(--r);border:none;cursor:pointer;
+  font-family:var(--mono);font-size:12px;font-weight:500;
+  transition:all .18s;letter-spacing:.3px;
+}
+.btn-primary{background:var(--accent);color:#07090f;}
+.btn-primary:hover{background:#1adfb8;transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,212,170,.3);}
+.btn-ghost{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.3);color:var(--accentB);}
+.btn-danger:hover{background:rgba(255,107,107,.2);}
+.btn-icon{
+  width:32px;height:32px;padding:0;border-radius:8px;
+  background:var(--bg3);border:1px solid var(--border);color:var(--dim);
+  display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;
+  transition:all .15s;
+}
+.btn-icon:hover{border-color:var(--border2);color:var(--text);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+/* ══ INPUTS ══ */
+input,select{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:8px;
+  padding:9px 12px;color:var(--bright);font-family:var(--mono);font-size:12px;
+  outline:none;transition:border-color .15s;width:100%;
+}
+input:focus,select:focus{border-color:var(--accent);}
+input[type=date]{color-scheme:dark;}
+label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;}
+
+/* ══ AUTH ══ */
+#auth-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:calc(100vh - 56px);padding:24px;
+}
+.auth-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+  padding:36px 28px;max-width:420px;width:100%;
+}
+.auth-card h2{font-family:var(--serif);font-size:24px;color:var(--bright);margin-bottom:6px;}
+.auth-card p{font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:28px;}
+.form-group{margin-bottom:14px;}
+.auth-note{font-size:10px;color:var(--dim);margin-top:18px;line-height:1.8;text-align:center;}
+.auth-note a{color:var(--accent);text-decoration:none;}
+.error-box{
+  background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25);
+  border-radius:8px;padding:10px 13px;font-size:11px;color:var(--accentB);
+  margin-top:10px;display:none;
+}
+
+/* ══ DASHBOARD LAYOUT ══ */
+#dashboard{display:none;max-width:960px;margin:0 auto;padding:16px;}
+
+/* ══ TOOLBAR ══ */
+.toolbar{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px;
+}
+.module-select{flex:1;min-width:160px;max-width:280px;}
+
+/* Period selector */
+.period-bar{
+  display:flex;background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;flex-shrink:0;
+}
+.p-btn{
+  padding:7px 11px;background:none;border:none;border-right:1px solid var(--border);
+  color:var(--dim);font-family:var(--mono);font-size:10px;cursor:pointer;
+  letter-spacing:.5px;transition:all .15s;white-space:nowrap;
+}
+.p-btn:last-child{border-right:none;}
+.p-btn:hover,.p-btn.active{background:var(--bg4);color:var(--accent);}
+.p-btn.active{font-weight:600;}
+
+/* Custom range */
+.range-row{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:10px 13px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);margin-bottom:14px;
+}
+.range-row input[type=date]{width:auto;flex:1;min-width:130px;}
+.range-label{font-size:10px;color:var(--dim);white-space:nowrap;}
+
+/* ══ CONDITIONS GRID ══ */
+.conditions-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:8px;margin-bottom:14px;
+}
+.ccard{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:13px;position:relative;overflow:hidden;cursor:pointer;
+  transition:border-color .18s,transform .18s,box-shadow .18s;
+}
+.ccard:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4);}
+.ccard.sel{border-color:var(--ccolor,var(--accent));box-shadow:0 0 0 1px var(--ccolor,var(--accent));}
+.ccard::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--ccolor,var(--accent));
+}
+.ccard-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:7px;}
+.ccard-val{font-family:var(--serif);font-size:26px;color:var(--bright);line-height:1;}
+.ccard-unit{font-size:10px;color:var(--dim);margin-top:3px;}
+.ccard-icon{position:absolute;top:10px;right:10px;font-size:17px;opacity:.35;}
+.ccard-trend{
+  position:absolute;bottom:8px;right:10px;
+  font-size:10px;font-weight:600;
+}
+
+/* ══ STATS BAND ══ */
+.stats-band{
+  display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;
+}
+.stat-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:20px;
+  background:var(--bg2);border:1px solid var(--border);
+  font-size:11px;color:var(--dim);cursor:pointer;transition:all .15s;
+  user-select:none;
+}
+.stat-pill input[type=checkbox]{accent-color:var(--accent);margin:0;cursor:pointer;}
+.stat-pill.enabled{border-color:var(--scolor,var(--accent));color:var(--scolor,var(--accent));}
+
+/* ══ CHART SECTION ══ */
+.chart-section{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:18px;margin-bottom:14px;
+}
+.chart-top{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:14px;gap:10px;flex-wrap:wrap;
+}
+.chart-meta h3{font-family:var(--serif);font-size:18px;color:var(--bright);}
+.chart-meta p{font-size:10px;color:var(--dim);margin-top:2px;}
+.sensor-pills{display:flex;flex-wrap:wrap;gap:5px;}
+.s-pill{
+  padding:4px 10px;border-radius:16px;font-size:10px;letter-spacing:.5px;
+  border:1px solid var(--border);background:var(--bg3);color:var(--dim);
+  cursor:pointer;transition:all .15s;
+}
+.s-pill.active{color:var(--bg);border-color:transparent;font-weight:600;}
+.chart-wrap{position:relative;height:240px;}
+
+/* summary row */
+.summary-row{
+  display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;
+  border-top:1px solid var(--border);padding-top:12px;
+}
+.summary-stat{flex:1;min-width:70px;text-align:center;}
+.summary-stat .sv{font-family:var(--serif);font-size:18px;color:var(--bright);}
+.summary-stat .sk{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:2px;}
+
+/* ══ MULTI COMPARE ══ */
+.compare-section{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:18px;margin-bottom:14px;
+}
+.compare-checks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.cmp-check{
+  display:flex;align-items:center;gap:6px;padding:5px 11px;
+  border-radius:16px;background:var(--bg3);border:1px solid var(--border);
+  font-size:10px;cursor:pointer;transition:all .15s;color:var(--dim);
+}
+.cmp-check input{accent-color:var(--ccolor,#fff);margin:0;}
+.cmp-check.on{border-color:var(--ccolor);color:var(--ccolor);}
+.compare-wrap{position:relative;height:200px;}
+
+/* ══ HEATMAP ══ */
+.heatmap-section{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:18px;margin-bottom:14px;
+}
+.heatmap-grid{
+  display:grid;gap:2px;margin-top:10px;overflow-x:auto;
+}
+.hm-cell{
+  border-radius:3px;aspect-ratio:1;min-width:12px;
+  transition:transform .1s;cursor:default;position:relative;
+}
+.hm-cell:hover{transform:scale(1.3);z-index:10;}
+.hm-legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:var(--dim);}
+.hm-gradient{
+  flex:1;height:8px;border-radius:4px;
+  background:linear-gradient(90deg,var(--hm-low,#0a2a3a),var(--hm-high,#00d4aa));
+}
+
+/* ══ ALERTS ══ */
+.alerts-section{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:18px;margin-bottom:14px;
+}
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.section-title{font-family:var(--serif);font-size:17px;color:var(--bright);}
+.alert-item{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:9px 11px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:8px;margin-bottom:7px;
+}
+.alert-item select,.alert-item input[type=number]{
+  width:auto;flex:1;min-width:70px;padding:6px 9px;font-size:11px;
+}
+.badge{
+  padding:3px 9px;border-radius:10px;font-size:10px;font-weight:600;
+  white-space:nowrap;
+}
+.badge-ok{background:rgba(0,212,170,.1);color:var(--accent);border:1px solid rgba(0,212,170,.25);}
+.badge-warn{background:rgba(255,169,77,.1);color:var(--accentC);border:1px solid rgba(255,169,77,.25);}
+.badge-danger{background:rgba(255,107,107,.1);color:var(--accentB);border:1px solid rgba(255,107,107,.25);}
+#alerts-status{margin-top:8px;font-size:11px;}
+
+/* ══ EXPORT ══ */
+.export-section{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:18px;margin-bottom:14px;
+}
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.exp-btn{
+  display:flex;align-items:center;gap:10px;padding:13px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  cursor:pointer;transition:all .18s;color:var(--text);font-family:var(--mono);
+}
+.exp-btn:hover{border-color:var(--accent);color:var(--accent);}
+.exp-icon{font-size:20px;flex-shrink:0;}
+.exp-label{font-size:12px;font-weight:500;}
+.exp-desc{font-size:10px;color:var(--dim);display:block;margin-top:2px;}
+
+/* ══ CONFIG ══ */
+.config-section{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:18px;margin-bottom:30px;
+}
+.cfg-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid var(--border);
+  font-size:11px;gap:8px;flex-wrap:wrap;
+}
+.cfg-row:last-child{border-bottom:none;}
+.cfg-k{color:var(--dim);letter-spacing:1px;font-size:10px;text-transform:uppercase;}
+.cfg-v{color:var(--bright);}
+
+/* ══ TOAST ══ */
+.toast{
+  position:fixed;bottom:20px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:10px;padding:11px 20px;font-size:12px;
+  z-index:9999;transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.ok{color:var(--accent);border-color:rgba(0,212,170,.4);}
+.toast.err{color:var(--accentB);border-color:rgba(255,107,107,.4);}
+
+/* ══ LOADER ══ */
+.loader{
+  text-align:center;padding:36px;color:var(--dim);font-size:11px;letter-spacing:1px;
+}
+.loader::before{
+  content:'';display:block;width:28px;height:28px;
+  border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;margin:0 auto 12px;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ══ SECTION DIVIDER ══ */
+.section-sep{
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);
+  margin:18px 0 10px;display:flex;align-items:center;gap:10px;
+}
+.section-sep::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:480px){
+  .conditions-grid{grid-template-columns:repeat(2,1fr);}
+  .export-grid{grid-template-columns:1fr;}
+  .ccard-val{font-size:22px;}
+  .period-bar{overflow-x:auto;}
+}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <header>
-    <div class="logo">
-      <div class="logo-icon">🌤</div>
-      <div>
-        <div class="logo-text">ATMOSTAT</div>
-        <span class="logo-sub">Netatmo Personal</span>
-      </div>
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">⛅</div>
+    <div>
+      <div class="logo-name">ATMOSTAT</div>
+      <div class="logo-tag">Netatmo Personal v2</div>
     </div>
-    <div class="header-status" id="header-status">
-      <div class="status-dot" id="status-dot"></div>
-      <span id="status-text">Non connecté</span>
+  </div>
+  <div class="header-right">
+    <div class="pill-status" id="status-pill">
+      <div class="dot"></div>
+      <span id="status-txt">Hors ligne</span>
     </div>
-  </header>
+  </div>
+</header>
 
-  <!-- AUTH SCREEN -->
-  <div id="auth-screen">
-    <div class="auth-card">
-      <div class="auth-title">Connexion à votre station</div>
-      <p class="auth-desc">Entrez vos identifiants de l'application Netatmo Developer pour accéder à vos données météo.</p>
+<!-- ══ AUTH ══ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <h2>Connexion</h2>
+    <p>Entrez vos identifiants Netatmo Developer pour accéder à votre station météo personnelle.</p>
+    <div class="form-group"><label>Client ID</label><input type="text" id="inp-cid" placeholder="na_client_id_..."></div>
+    <div class="form-group"><label>Client Secret</label><input type="password" id="inp-csec" placeholder="na_client_secret_..."></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="startAuth()">Connexion Netatmo →</button>
+    <div class="error-box" id="auth-err"></div>
+    <p class="auth-note">
+      Redirect URI à déclarer sur <a href="https://dev.netatmo.com/apps" target="_blank">dev.netatmo.com</a> :<br>
+      <strong id="redir-display" style="color:var(--text2)"></strong>
+    </p>
+  </div>
+</div>
 
-      <div class="input-group">
-        <label>Client ID</label>
-        <input type="text" id="client-id" placeholder="na_client_id_..." autocomplete="off">
-      </div>
-      <div class="input-group">
-        <label>Client Secret</label>
-        <input type="password" id="client-secret" placeholder="na_client_secret_...">
-      </div>
+<!-- ══ DASHBOARD ══ -->
+<div id="dashboard">
 
-      <button class="btn" id="btn-auth" onclick="startAuth()">Se connecter via Netatmo →</button>
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <select class="module-select" id="module-sel" onchange="onModuleChange()"></select>
+    <div class="period-bar" id="period-bar">
+      <button class="p-btn" data-h="0.5"  onclick="setPeriod(this)">30min</button>
+      <button class="p-btn" data-h="1"    onclick="setPeriod(this)">1h</button>
+      <button class="p-btn" data-h="6"    onclick="setPeriod(this)">6h</button>
+      <button class="p-btn" data-h="12"   onclick="setPeriod(this)">12h</button>
+      <button class="p-btn active" data-h="24" onclick="setPeriod(this)">24h</button>
+      <button class="p-btn" data-h="168"  onclick="setPeriod(this)">7j</button>
+      <button class="p-btn" data-h="720"  onclick="setPeriod(this)">30j</button>
+      <button class="p-btn" data-h="2160" onclick="setPeriod(this)">3M</button>
+      <button class="p-btn" data-h="8760" onclick="setPeriod(this)">1an</button>
+      <button class="p-btn" data-h="custom" onclick="toggleCustomRange(this)">📅</button>
+    </div>
+    <button class="btn btn-ghost" onclick="refreshAll()" style="padding:7px 12px;font-size:11px">↻</button>
+    <button class="btn btn-ghost" onclick="logout()" style="padding:7px 12px;font-size:11px">⏻</button>
+  </div>
 
-      <div class="error-msg" id="auth-error"></div>
+  <!-- CUSTOM RANGE -->
+  <div class="range-row" id="custom-range" style="display:none">
+    <span class="range-label">De</span>
+    <input type="date" id="date-from">
+    <span class="range-label">à</span>
+    <input type="date" id="date-to">
+    <button class="btn btn-primary" style="padding:7px 14px;font-size:11px" onclick="applyCustomRange()">Appliquer</button>
+  </div>
 
-      <p class="auth-note">
-        Vos identifiants sont stockés uniquement dans votre navigateur.<br>
-        Obtenez les vôtres sur <a href="https://dev.netatmo.com/apps" target="_blank">dev.netatmo.com/apps</a>.<br>
-        L'URL de redirection doit être : <strong id="redirect-uri-display"></strong>
-      </p>
+  <!-- CONDITIONS -->
+  <div class="section-sep">Conditions actuelles</div>
+  <div class="conditions-grid" id="cond-grid">
+    <div class="loader" style="grid-column:1/-1"></div>
+  </div>
+
+  <!-- STATS TOGGLES -->
+  <div class="stats-band" id="stats-band">
+    <label style="font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin:auto 4px auto 0;display:flex;align-items:center">Afficher :</label>
+    <div class="stat-pill" id="pill-min" onclick="toggleStat('min')" style="--scolor:#74c0fc">
+      <input type="checkbox" id="cb-min"> Min
+    </div>
+    <div class="stat-pill" id="pill-max" onclick="toggleStat('max')" style="--scolor:#ff6b6b">
+      <input type="checkbox" id="cb-max"> Max
+    </div>
+    <div class="stat-pill" id="pill-avg" onclick="toggleStat('avg')" style="--scolor:#ffa94d">
+      <input type="checkbox" id="cb-avg"> Moyenne
     </div>
   </div>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard">
-
-    <!-- CONTROLS -->
-    <div class="controls">
-      <div class="period-tabs" id="period-tabs">
-        <button class="period-tab active" data-days="1" onclick="setPeriod(this)">24h</button>
-        <button class="period-tab" data-days="7" onclick="setPeriod(this)">7J</button>
-        <button class="period-tab" data-days="30" onclick="setPeriod(this)">30J</button>
-        <button class="period-tab" data-days="90" onclick="setPeriod(this)">3M</button>
+  <!-- CHART -->
+  <div class="chart-section">
+    <div class="chart-top">
+      <div class="chart-meta">
+        <h3 id="chart-title">Historique</h3>
+        <p id="chart-subtitle">Sélectionnez un capteur</p>
       </div>
-      <select class="module-select" id="module-select" onchange="loadModuleData()">
-        <option value="">Chargement...</option>
+      <div class="sensor-pills" id="sensor-pills"></div>
+    </div>
+    <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
+    <div class="summary-row" id="summary-row"></div>
+  </div>
+
+  <!-- MULTI COMPARE -->
+  <div class="compare-section">
+    <div class="section-header">
+      <div class="section-title">📊 Comparaison multi-capteurs</div>
+    </div>
+    <div class="compare-checks" id="cmp-checks"></div>
+    <div class="compare-wrap"><canvas id="cmp-chart"></canvas></div>
+  </div>
+
+  <!-- HEATMAP -->
+  <div class="heatmap-section">
+    <div class="section-header">
+      <div class="section-title">🔥 Carte de chaleur journalière</div>
+      <select id="hm-sensor" onchange="renderHeatmap()" style="width:auto;padding:6px 10px;font-size:11px">
+        <option value="Temperature">Température</option>
+        <option value="Humidity">Humidité</option>
+        <option value="CO2">CO₂</option>
+        <option value="Noise">Bruit</option>
       </select>
-      <button class="btn btn-sm btn-outline" onclick="refreshAll()">↻ Actualiser</button>
-      <button class="btn btn-sm btn-outline" onclick="logout()">Déconnexion</button>
     </div>
+    <div id="heatmap-wrap"><div class="loader"></div></div>
+  </div>
 
-    <!-- CURRENT CONDITIONS -->
-    <div class="conditions-grid" id="conditions-grid">
-      <div class="loader" style="grid-column:1/-1;padding:20px"></div>
+  <!-- ALERTS -->
+  <div class="alerts-section">
+    <div class="section-header">
+      <div class="section-title">⚡ Alertes</div>
+      <button class="btn btn-ghost" style="padding:6px 12px;font-size:11px" onclick="addAlert()">+ Ajouter</button>
     </div>
+    <div id="alerts-list"></div>
+    <div id="alerts-status"></div>
+  </div>
 
-    <!-- CHART -->
-    <div class="chart-section">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title" id="chart-title">Historique</div>
-          <div class="chart-subtitle" id="chart-subtitle">Sélectionnez une mesure</div>
-        </div>
-        <div class="measure-pills" id="measure-pills"></div>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="main-chart"></canvas>
-      </div>
+  <!-- EXPORT -->
+  <div class="export-section">
+    <div class="section-title" style="margin-bottom:0">📤 Export</div>
+    <div class="export-grid">
+      <button class="exp-btn" onclick="doExport('csv')">
+        <span class="exp-icon">📊</span>
+        <span><span class="exp-label">CSV</span><span class="exp-desc">Pour Excel / Sheets</span></span>
+      </button>
+      <button class="exp-btn" onclick="doExport('json')">
+        <span class="exp-icon">📋</span>
+        <span><span class="exp-label">JSON</span><span class="exp-desc">Format structuré</span></span>
+      </button>
     </div>
+  </div>
 
-    <!-- ALERTS -->
-    <div class="alerts-section">
-      <div class="section-title">
-        <span>⚡ Alertes personnalisées</span>
-        <button class="btn btn-sm" onclick="addAlertRule()">+ Ajouter</button>
-      </div>
-      <div id="alerts-list"></div>
-      <div id="alerts-status" style="margin-top:10px;font-size:11px;color:var(--text-dim)"></div>
-    </div>
-
-    <!-- EXPORT -->
-    <div class="export-section">
-      <div class="section-title">📤 Export des données</div>
-      <div class="export-grid">
-        <button class="export-btn" onclick="exportCSV()">
-          <span class="export-icon">📊</span>
-          <span>
-            <span class="export-label">CSV</span>
-            <span class="export-desc">Données brutes pour Excel</span>
-          </span>
-        </button>
-        <button class="export-btn" onclick="exportJSON()">
-          <span class="export-icon">📋</span>
-          <span>
-            <span class="export-label">JSON</span>
-            <span class="export-desc">Format développeur</span>
-          </span>
-        </button>
-      </div>
-    </div>
-
-    <!-- CONFIG INFO -->
-    <div class="config-section" id="config-section">
-      <div class="section-title">⚙️ Configuration</div>
-      <div id="config-info"></div>
-    </div>
-
+  <!-- CONFIG -->
+  <div class="config-section">
+    <div class="section-title" style="margin-bottom:14px">⚙️ Station</div>
+    <div id="cfg-info"></div>
   </div>
 
 </div>
+</div><!-- #app -->
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════
-const REDIRECT_URI = window.location.href.split('?')[0].split('#')[0];
-const NETATMO_AUTH_URL = 'https://api.netatmo.com/oauth2/authorize';
+// ═══════════════════════════════════════════
+// CONSTANTS & STATE
+// ═══════════════════════════════════════════
+const REDIRECT = location.href.split('?')[0].split('#')[0];
+const AUTH_URL  = 'https://api.netatmo.com/oauth2/authorize';
 const TOKEN_URL = 'https://api.netatmo.com/oauth2/token';
-const API_BASE = 'https://api.netatmo.com/api';
+const API       = 'https://api.netatmo.com/api';
 
-// Show redirect URI
-document.getElementById('redirect-uri-display').textContent = REDIRECT_URI;
+document.getElementById('redir-display').textContent = REDIRECT;
 
-let state = {
-  accessToken: localStorage.getItem('nat_access'),
-  refreshToken: localStorage.getItem('nat_refresh'),
-  tokenExpiry: parseInt(localStorage.getItem('nat_expiry') || '0'),
-  clientId: localStorage.getItem('nat_cid') || '',
-  clientSecret: localStorage.getItem('nat_csec') || '',
+const SENSORS = {
+  Temperature:  {label:'Température', unit:'°C',   icon:'🌡', color:'#ffa94d'},
+  Humidity:     {label:'Humidité',    unit:'%',    icon:'💧', color:'#74c0fc'},
+  CO2:          {label:'CO₂',         unit:'ppm',  icon:'🌿', color:'#69db7c'},
+  Pressure:     {label:'Pression',    unit:'hPa',  icon:'🔵', color:'#a9e34b'},
+  Noise:        {label:'Bruit',       unit:'dB',   icon:'🔊', color:'#f783ac'},
+  Rain:         {label:'Pluie',       unit:'mm',   icon:'🌧', color:'#4dabf7'},
+  sum_rain:     {label:'Pluie cumul', unit:'mm',   icon:'🌧', color:'#339af0'},
+  WindStrength: {label:'Vent',        unit:'km/h', icon:'💨', color:'#66d9e8'},
+  GustStrength: {label:'Rafales',     unit:'km/h', icon:'🌪', color:'#99e9f2'},
+  WindAngle:    {label:'Dir. vent',   unit:'°',    icon:'🧭', color:'#8ce99a'},
+};
+
+let S = {
+  token: localStorage.getItem('na_tok'),
+  refresh: localStorage.getItem('na_ref'),
+  expiry: +localStorage.getItem('na_exp') || 0,
+  cid: localStorage.getItem('na_cid') || '',
+  csec: localStorage.getItem('na_csec') || '',
   devices: [],
-  currentModule: null,
-  currentMeasure: null,
-  currentDays: 1,
+  module: null,       // {deviceId, moduleId}
+  sensor: 'Temperature',
+  hours: 24,
+  customFrom: null,
+  customTo: null,
   chartData: null,
   chart: null,
-  alerts: JSON.parse(localStorage.getItem('nat_alerts') || '[]'),
+  cmpChart: null,
+  stats: {min:false, max:false, avg:false},
+  alerts: JSON.parse(localStorage.getItem('na_alerts') || '[]'),
+  hmData: null,
 };
 
-// Pre-fill client id
-if (state.clientId) document.getElementById('client-id').value = state.clientId;
+if (S.cid) document.getElementById('inp-cid').value = S.cid;
 
-// ══════════════════════════════════════════
-// SENSOR CONFIG
-// ══════════════════════════════════════════
-const SENSORS = {
-  Temperature:  { label:'Température', unit:'°C',    icon:'🌡', color:'#f0a500', key:'temperature' },
-  Humidity:     { label:'Humidité',    unit:'%',     icon:'💧', color:'#3ecfcf', key:'humidity' },
-  CO2:          { label:'CO₂',         unit:'ppm',   icon:'🌿', color:'#6ab04c', key:'co2' },
-  Pressure:     { label:'Pression',    unit:'hPa',   icon:'🔵', color:'#a29bfe', key:'pressure' },
-  Noise:        { label:'Bruit',       unit:'dB',    icon:'🔊', color:'#fd79a8', key:'noise' },
-  Rain:         { label:'Pluie',       unit:'mm',    icon:'🌧', color:'#74b9ff', key:'rain' },
-  WindStrength: { label:'Vent',        unit:'km/h',  icon:'💨', color:'#55efc4', key:'windstrength' },
-  WindAngle:    { label:'Dir. vent',   unit:'°',     icon:'🧭', color:'#81ecec', key:'windangle' },
-  GustStrength: { label:'Rafales',     unit:'km/h',  icon:'🌪', color:'#fab1a0', key:'guststrength' },
-};
-
-// ══════════════════════════════════════════
-// AUTH FLOW
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════
 function startAuth() {
-  const cid = document.getElementById('client-id').value.trim();
-  const csec = document.getElementById('client-secret').value.trim();
-  if (!cid || !csec) { showError('Remplissez Client ID et Client Secret.'); return; }
-  localStorage.setItem('nat_cid', cid);
-  localStorage.setItem('nat_csec', csec);
-  state.clientId = cid;
-  state.clientSecret = csec;
-
-  const params = new URLSearchParams({
-    client_id: cid,
-    redirect_uri: REDIRECT_URI,
-    scope: 'read_station',
-    response_type: 'code',
-    state: Math.random().toString(36).slice(2),
+  const cid = document.getElementById('inp-cid').value.trim();
+  const csec = document.getElementById('inp-csec').value.trim();
+  if (!cid || !csec) { authErr('Remplissez les deux champs.'); return; }
+  localStorage.setItem('na_cid', cid);
+  localStorage.setItem('na_csec', csec);
+  S.cid = cid; S.csec = csec;
+  const p = new URLSearchParams({
+    client_id:cid, redirect_uri:REDIRECT,
+    scope:'read_station', response_type:'code',
+    state:'x'
   });
-  window.location.href = NETATMO_AUTH_URL + '?' + params.toString();
+  location.href = AUTH_URL + '?' + p;
 }
 
-async function handleCallback() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
+async function handleCode() {
+  const p = new URLSearchParams(location.search);
+  const code = p.get('code');
   if (!code) return false;
-
-  // Clean URL
-  window.history.replaceState({}, document.title, REDIRECT_URI);
-
-  const cid = localStorage.getItem('nat_cid');
-  const csec = localStorage.getItem('nat_csec');
-  if (!cid || !csec) { showError('Client ID/Secret manquant, reconnectez-vous.'); return false; }
-
+  history.replaceState({}, '', REDIRECT);
+  const cid = localStorage.getItem('na_cid');
+  const csec = localStorage.getItem('na_csec');
+  if (!cid || !csec) return false;
   try {
-    const resp = await fetch(TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: REDIRECT_URI,
-        client_id: cid,
-        client_secret: csec,
-      })
+    const r = await fetch(TOKEN_URL, {
+      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({grant_type:'authorization_code', code, redirect_uri:REDIRECT, client_id:cid, client_secret:csec})
     });
-    const data = await resp.json();
-    if (data.access_token) {
-      saveTokens(data);
-      return true;
-    } else {
-      showError('Erreur token : ' + (data.error_description || data.error));
-      return false;
-    }
-  } catch(e) {
-    showError('Erreur réseau : ' + e.message);
+    const d = await r.json();
+    if (d.access_token) { saveTokens(d); return true; }
+    authErr(d.error_description || d.error);
     return false;
-  }
+  } catch(e) { authErr(e.message); return false; }
 }
 
-function saveTokens(data) {
-  state.accessToken = data.access_token;
-  state.refreshToken = data.refresh_token;
-  state.tokenExpiry = Date.now() + data.expires_in * 1000;
-  localStorage.setItem('nat_access', state.accessToken);
-  localStorage.setItem('nat_refresh', state.refreshToken);
-  localStorage.setItem('nat_expiry', state.tokenExpiry);
+function saveTokens(d) {
+  S.token = d.access_token;
+  S.refresh = d.refresh_token;
+  S.expiry = Date.now() + d.expires_in * 1000;
+  localStorage.setItem('na_tok', S.token);
+  localStorage.setItem('na_ref', S.refresh);
+  localStorage.setItem('na_exp', S.expiry);
 }
 
 async function ensureToken() {
-  if (state.accessToken && Date.now() < state.tokenExpiry - 60000) return true;
-  if (!state.refreshToken) return false;
+  if (S.token && Date.now() < S.expiry - 60000) return true;
+  if (!S.refresh) return false;
   try {
-    const resp = await fetch(TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: state.refreshToken,
-        client_id: state.clientId,
-        client_secret: state.clientSecret,
-      })
+    const r = await fetch(TOKEN_URL, {
+      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({grant_type:'refresh_token', refresh_token:S.refresh, client_id:S.cid, client_secret:S.csec})
     });
-    const data = await resp.json();
-    if (data.access_token) { saveTokens(data); return true; }
+    const d = await r.json();
+    if (d.access_token) { saveTokens(d); return true; }
     return false;
   } catch { return false; }
 }
 
 function logout() {
-  ['nat_access','nat_refresh','nat_expiry'].forEach(k => localStorage.removeItem(k));
-  state.accessToken = null;
-  showAuthScreen();
+  ['na_tok','na_ref','na_exp'].forEach(k => localStorage.removeItem(k));
+  S.token = null; showAuth();
+}
+function authErr(msg) {
+  const e = document.getElementById('auth-err');
+  e.textContent = msg; e.style.display = 'block';
 }
 
-// ══════════════════════════════════════════
-// SCREEN MANAGEMENT
-// ══════════════════════════════════════════
-function showAuthScreen() {
+// ═══════════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════════
+function showAuth() {
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('dashboard').style.display = 'none';
-  updateStatusBadge(false);
+  setStatus(false);
 }
-
-function showDashboard() {
+function showDash() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
-  updateStatusBadge(true);
+  setStatus(true);
+}
+function setStatus(on) {
+  const p = document.getElementById('status-pill');
+  const t = document.getElementById('status-txt');
+  p.className = 'pill-status' + (on ? ' on' : '');
+  t.textContent = on ? 'Connecté' : 'Hors ligne';
 }
 
-function updateStatusBadge(online) {
-  const dot = document.getElementById('status-dot');
-  const txt = document.getElementById('status-text');
-  dot.className = 'status-dot' + (online ? ' online' : '');
-  txt.textContent = online ? 'Connecté' : 'Non connecté';
+// ═══════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════
+async function apiGet(ep, params={}) {
+  if (!await ensureToken()) throw new Error('Session expirée');
+  const u = new URL(API + ep);
+  Object.entries(params).forEach(([k,v]) => u.searchParams.set(k, v));
+  const r = await fetch(u, {headers:{Authorization:'Bearer '+S.token}});
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+  return d;
 }
 
-// ══════════════════════════════════════════
-// API CALLS
-// ══════════════════════════════════════════
-async function apiGet(endpoint, params = {}) {
-  if (!await ensureToken()) throw new Error('Token invalide');
-  const url = new URL(API_BASE + endpoint);
-  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
-  const resp = await fetch(url, { headers: { Authorization: 'Bearer ' + state.accessToken } });
-  const data = await resp.json();
-  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  return data;
-}
-
-async function loadDevices() {
-  const data = await apiGet('/getstationsdata', { get_favorites: false });
-  state.devices = data.body.devices || [];
-  return state.devices;
-}
-
-async function getMeasure(deviceId, moduleId, types, dateBegin, dateEnd, scale = '30min') {
+async function getMeasure(deviceId, moduleId, types, from, to, scale) {
   const params = {
     device_id: deviceId,
-    scale,
-    type: types.join(','),
-    date_begin: Math.floor(dateBegin / 1000),
-    date_end: Math.floor(dateEnd / 1000),
-    optimize: false,
-    real_time: false,
+    scale, type: types.join(','),
+    date_begin: Math.floor(from/1000),
+    date_end: Math.floor(to/1000),
+    optimize: false, real_time: false,
   };
   if (moduleId) params.module_id = moduleId;
-  const data = await apiGet('/getmeasure', params);
-  return data.body;
+  const d = await apiGet('/getmeasure', params);
+  return d.body;
 }
 
-// ══════════════════════════════════════════
-// DASHBOARD LOADING
-// ══════════════════════════════════════════
+function pickScale(hours) {
+  if (hours <= 1)    return '5min';
+  if (hours <= 6)    return '30min';
+  if (hours <= 24)   return '1hour';
+  if (hours <= 168)  return '3hours';
+  if (hours <= 720)  return '1day';
+  return '1week';
+}
+
+// ═══════════════════════════════════════════
+// REFRESH ALL
+// ═══════════════════════════════════════════
 async function refreshAll() {
   try {
-    const devices = await loadDevices();
-    if (!devices.length) { toast('Aucune station trouvée'); return; }
+    const data = await apiGet('/getstationsdata');
+    S.devices = data.body.devices || [];
+    if (!S.devices.length) { toast('Aucune station trouvée', 'err'); return; }
+    populateModules();
+    await onModuleChange();
+  } catch(e) { toast('Erreur: ' + e.message, 'err'); }
+}
 
-    // Populate module select
-    const sel = document.getElementById('module-select');
-    sel.innerHTML = '';
-
-    devices.forEach(dev => {
-      const opt = document.createElement('option');
-      opt.value = JSON.stringify({ deviceId: dev._id, moduleId: null });
-      opt.textContent = `${dev.station_name} (intérieur)`;
-      sel.appendChild(opt);
-
-      (dev.modules || []).forEach(mod => {
-        const o = document.createElement('option');
-        o.value = JSON.stringify({ deviceId: dev._id, moduleId: mod._id, moduleType: mod.type });
-        o.textContent = `${dev.station_name} › ${mod.module_name}`;
-        sel.appendChild(o);
-      });
+function populateModules() {
+  const sel = document.getElementById('module-sel');
+  sel.innerHTML = '';
+  S.devices.forEach(dev => {
+    const o = document.createElement('option');
+    o.value = JSON.stringify({deviceId:dev._id, moduleId:null});
+    o.textContent = `${dev.station_name} — Intérieur`;
+    sel.appendChild(o);
+    (dev.modules||[]).forEach(mod => {
+      const o2 = document.createElement('option');
+      o2.value = JSON.stringify({deviceId:dev._id, moduleId:mod._id});
+      o2.textContent = `${dev.station_name} — ${mod.module_name}`;
+      sel.appendChild(o2);
     });
-
-    // Config display
-    const dev = devices[0];
-    document.getElementById('config-info').innerHTML = `
-      <div class="config-row"><span class="config-key">STATION</span><span class="config-val">${dev.station_name}</span></div>
-      <div class="config-row"><span class="config-key">LIEU</span><span class="config-val">${dev.place?.city || '—'}, ${dev.place?.country || ''}</span></div>
-      <div class="config-row"><span class="config-key">ALTITUDE</span><span class="config-val">${dev.place?.altitude || '—'} m</span></div>
-      <div class="config-row"><span class="config-key">FIRMWARE</span><span class="config-val">${dev.firmware || '—'}</span></div>
-      <div class="config-row"><span class="config-key">DERNIÈRE SYNCHRO</span><span class="config-val">${dev.last_status_store ? new Date(dev.last_status_store*1000).toLocaleString('fr-FR') : '—'}</span></div>
-    `;
-
-    await loadModuleData();
-
-  } catch(e) {
-    toast('Erreur : ' + e.message, true);
-  }
+  });
+  const dev = S.devices[0];
+  document.getElementById('cfg-info').innerHTML = [
+    ['Station', dev.station_name],
+    ['Lieu', `${dev.place?.city||'—'}, ${dev.place?.country||''}`],
+    ['Altitude', `${dev.place?.altitude||'—'} m`],
+    ['Firmware', dev.firmware||'—'],
+    ['Dernière sync', dev.last_status_store ? new Date(dev.last_status_store*1000).toLocaleString('fr-FR') : '—'],
+  ].map(([k,v]) => `<div class="cfg-row"><span class="cfg-k">${k}</span><span class="cfg-v">${v}</span></div>`).join('');
 }
 
-async function loadModuleData() {
-  const sel = document.getElementById('module-select');
-  if (!sel.value) return;
-
-  const { deviceId, moduleId } = JSON.parse(sel.value);
-  state.currentModule = { deviceId, moduleId };
-
-  // Get current data
-  renderCurrentConditions(deviceId, moduleId);
-  // Load chart
+async function onModuleChange() {
+  const val = document.getElementById('module-sel').value;
+  if (!val) return;
+  S.module = JSON.parse(val);
+  renderConditions();
   await loadChart();
-  // Check alerts
+  await loadCompare();
+  await loadHeatmap();
   checkAlerts();
+  renderAlerts();
 }
 
-function getModuleData(deviceId, moduleId) {
-  for (const dev of state.devices) {
-    if (dev._id === deviceId) {
-      if (!moduleId) return dev.dashboard_data || {};
-      const mod = (dev.modules || []).find(m => m._id === moduleId);
-      return mod?.dashboard_data || {};
-    }
+// ═══════════════════════════════════════════
+// CONDITIONS
+// ═══════════════════════════════════════════
+function getModuleData() {
+  if (!S.module) return {};
+  const {deviceId, moduleId} = S.module;
+  for (const dev of S.devices) {
+    if (dev._id !== deviceId) continue;
+    if (!moduleId) return dev.dashboard_data || {};
+    const mod = (dev.modules||[]).find(m => m._id === moduleId);
+    return mod?.dashboard_data || {};
   }
   return {};
 }
 
-function getAvailableSensors(deviceId, moduleId) {
-  const data = getModuleData(deviceId, moduleId);
-  return Object.keys(SENSORS).filter(k => data[k] !== undefined || data[k.toLowerCase()] !== undefined);
+function renderConditions() {
+  const data = getModuleData();
+  const grid = document.getElementById('cond-grid');
+  const avail = Object.entries(SENSORS).filter(([k]) => data[k] !== undefined);
+  if (!avail.length) { grid.innerHTML = '<div style="color:var(--dim);font-size:11px;padding:8px">Aucune donnée</div>'; return; }
+
+  grid.innerHTML = avail.map(([k, cfg]) => {
+    const v = data[k];
+    const disp = typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(1)) : v;
+    const sel = S.sensor === k ? 'sel' : '';
+    return `<div class="ccard ${sel}" style="--ccolor:${cfg.color}" onclick="selectSensor('${k}')">
+      <div class="ccard-label">${cfg.label}</div>
+      <div class="ccard-val">${disp}</div>
+      <div class="ccard-unit">${cfg.unit}</div>
+      <div class="ccard-icon">${cfg.icon}</div>
+    </div>`;
+  }).join('');
+
+  // sensor pills in chart
+  const pills = document.getElementById('sensor-pills');
+  pills.innerHTML = avail.map(([k, cfg]) => {
+    const active = S.sensor === k ? 'active' : '';
+    return `<button class="s-pill ${active}" style="${S.sensor===k ? `background:${cfg.color};` : ''}" onclick="selectSensor('${k}')">${cfg.icon} ${cfg.label}</button>`;
+  }).join('');
+
+  // compare checks
+  const cc = document.getElementById('cmp-checks');
+  cc.innerHTML = avail.map(([k, cfg]) => {
+    const on = S.cmpSensors && S.cmpSensors.includes(k) ? 'on' : '';
+    return `<label class="cmp-check ${on}" style="--ccolor:${cfg.color}" id="cmp-lbl-${k}">
+      <input type="checkbox" ${on ? 'checked' : ''} onchange="toggleCmp('${k}', this.checked)">
+      ${cfg.icon} ${cfg.label}
+    </label>`;
+  }).join('');
 }
 
-function renderCurrentConditions(deviceId, moduleId) {
-  const data = getModuleData(deviceId, moduleId);
-  const grid = document.getElementById('conditions-grid');
-  grid.innerHTML = '';
-
-  // Find available keys
-  const available = Object.entries(SENSORS).filter(([k]) => {
-    const val = data[k] ?? data[k.charAt(0).toUpperCase() + k.slice(1)];
-    return val !== undefined;
-  });
-
-  if (!available.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;color:var(--text-dim);font-size:12px;padding:12px">Aucune donnée disponible pour ce module.</div>';
-    return;
-  }
-
-  available.forEach(([key, cfg]) => {
-    const val = data[key] ?? data[key.charAt(0).toUpperCase() + key.slice(1)];
-    if (val === undefined) return;
-    const card = document.createElement('div');
-    card.className = 'condition-card' + (state.currentMeasure === key ? ' selected' : '');
-    card.style.setProperty('--card-color', cfg.color);
-    card.onclick = () => { state.currentMeasure = key; loadChart(); renderCurrentConditions(deviceId, moduleId); };
-    card.innerHTML = `
-      <div class="card-label">${cfg.label}</div>
-      <div class="card-value">${typeof val === 'number' ? (Number.isInteger(val) ? val : val.toFixed(1)) : val}</div>
-      <div class="card-unit">${cfg.unit}</div>
-      <div class="card-icon">${cfg.icon}</div>
-    `;
-    grid.appendChild(card);
-  });
-
-  // Auto-select first
-  if (!state.currentMeasure && available.length) {
-    state.currentMeasure = available[0][0];
-    loadChart();
-  }
-}
-
-// ══════════════════════════════════════════
-// CHART
-// ══════════════════════════════════════════
-function setPeriod(btn) {
-  document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  state.currentDays = parseInt(btn.dataset.days);
+function selectSensor(k) {
+  S.sensor = k;
+  renderConditions();
   loadChart();
 }
 
-async function loadChart() {
-  if (!state.currentModule || !state.currentMeasure) return;
-  const { deviceId, moduleId } = state.currentModule;
-  const sensor = SENSORS[state.currentMeasure];
-  if (!sensor) return;
+// ═══════════════════════════════════════════
+// PERIOD
+// ═══════════════════════════════════════════
+function setPeriod(btn) {
+  document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const v = btn.dataset.h;
+  if (v === 'custom') return;
+  S.hours = parseFloat(v);
+  S.customFrom = null; S.customTo = null;
+  document.getElementById('custom-range').style.display = 'none';
+  loadChart(); loadCompare(); loadHeatmap();
+}
 
-  const cfg = sensor;
-  document.getElementById('chart-title').textContent = `${cfg.icon} ${cfg.label}`;
-  document.getElementById('chart-subtitle').textContent = `${state.currentDays === 1 ? 'Dernières 24h' : state.currentDays <= 7 ? `${state.currentDays} derniers jours` : `${state.currentDays} derniers jours`} · ${cfg.unit}`;
-
-  // Measure pills
-  const data = getModuleData(deviceId, moduleId);
-  const available = Object.entries(SENSORS).filter(([k]) => data[k] !== undefined || data[k.toLowerCase()] !== undefined);
-  const pillsEl = document.getElementById('measure-pills');
-  pillsEl.innerHTML = available.map(([k, c]) => `
-    <button class="pill ${state.currentMeasure === k ? 'active' : ''}" 
-      style="${state.currentMeasure === k ? `background:${c.color};border-color:${c.color}` : ''}"
-      onclick="state.currentMeasure='${k}';loadChart();renderCurrentConditions('${deviceId}','${moduleId || ''}')">
-      ${c.icon} ${c.label}
-    </button>
-  `).join('');
-
-  const scale = state.currentDays <= 1 ? '30min' : state.currentDays <= 7 ? '1hour' : state.currentDays <= 30 ? '3hours' : '1day';
-  const dateEnd = Date.now();
-  const dateBegin = dateEnd - state.currentDays * 86400 * 1000;
-
-  try {
-    const measures = await getMeasure(deviceId, moduleId, [state.currentMeasure], dateBegin, dateEnd, scale);
-    if (!measures || !Object.keys(measures).length) {
-      toast('Aucune donnée historique pour cette période');
-      return;
-    }
-
-    // Parse response
-    const labels = [], values = [];
-    Object.entries(measures).forEach(([ts, arr]) => {
-      const v = Array.isArray(arr) ? arr[0] : arr;
-      if (v !== null && v !== undefined) {
-        labels.push(new Date(parseInt(ts) * 1000));
-        values.push(v);
-      }
-    });
-
-    // Sort
-    const combined = labels.map((l, i) => [l, values[i]]).sort((a, b) => a[0] - b[0]);
-    const sortedLabels = combined.map(x => x[0]);
-    const sortedValues = combined.map(x => x[1]);
-
-    state.chartData = { labels: sortedLabels, values: sortedValues, sensor: state.currentMeasure };
-    renderChart(sortedLabels, sortedValues, cfg);
-
-  } catch(e) {
-    toast('Erreur historique : ' + e.message, true);
+function toggleCustomRange(btn) {
+  const el = document.getElementById('custom-range');
+  const showing = el.style.display !== 'none';
+  el.style.display = showing ? 'none' : 'flex';
+  if (!showing) {
+    const now = new Date();
+    const week = new Date(now - 7*864e5);
+    document.getElementById('date-to').value = now.toISOString().slice(0,10);
+    document.getElementById('date-from').value = week.toISOString().slice(0,10);
   }
 }
 
-function renderChart(labels, values, cfg) {
+function applyCustomRange() {
+  const from = document.getElementById('date-from').value;
+  const to = document.getElementById('date-to').value;
+  if (!from || !to) { toast('Sélectionnez les deux dates', 'err'); return; }
+  S.customFrom = new Date(from).getTime();
+  S.customTo = new Date(to).getTime() + 86399000;
+  S.hours = null;
+  loadChart(); loadCompare(); loadHeatmap();
+}
+
+function getDateRange() {
+  if (S.customFrom && S.customTo) return {from: S.customFrom, to: S.customTo};
+  const to = Date.now();
+  return {from: to - S.hours * 3600000, to};
+}
+
+// ═══════════════════════════════════════════
+// STATS TOGGLES
+// ═══════════════════════════════════════════
+function toggleStat(key) {
+  S.stats[key] = !S.stats[key];
+  const pill = document.getElementById('pill-' + key);
+  const cb = document.getElementById('cb-' + key);
+  pill.classList.toggle('enabled', S.stats[key]);
+  cb.checked = S.stats[key];
+  renderChartFromCache();
+}
+
+// ═══════════════════════════════════════════
+// MAIN CHART
+// ═══════════════════════════════════════════
+async function loadChart() {
+  if (!S.module || !S.sensor) return;
+  const cfg = SENSORS[S.sensor];
+  if (!cfg) return;
+  const {from, to} = getDateRange();
+  const hours = S.hours || (to - from) / 3600000;
+  const scale = pickScale(hours);
+
+  document.getElementById('chart-title').textContent = `${cfg.icon} ${cfg.label}`;
+  document.getElementById('chart-subtitle').textContent = `${formatRange(from, to)} · ${cfg.unit} · échelle ${scale}`;
+
+  try {
+    const raw = await getMeasure(S.module.deviceId, S.module.moduleId, [S.sensor], from, to, scale);
+    if (!raw || !Object.keys(raw).length) { toast('Pas de données pour cette période'); return; }
+    const pts = parseMeasure(raw);
+    S.chartData = {pts, cfg, sensor: S.sensor};
+    renderChartFromCache();
+  } catch(e) { toast('Erreur graphique: ' + e.message, 'err'); }
+}
+
+function parseMeasure(raw) {
+  return Object.entries(raw)
+    .map(([ts, arr]) => {
+      const v = Array.isArray(arr) ? arr[0] : arr;
+      return v !== null && v !== undefined ? {t: parseInt(ts)*1000, v} : null;
+    })
+    .filter(Boolean)
+    .sort((a,b) => a.t - b.t);
+}
+
+function renderChartFromCache() {
+  if (!S.chartData) return;
+  const {pts, cfg} = S.chartData;
+  const labels = pts.map(p => new Date(p.t));
+  const values = pts.map(p => p.v);
+
+  // Stats
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const avg = values.reduce((a,b) => a+b, 0) / values.length;
+
+  // Summary
+  document.getElementById('summary-row').innerHTML = `
+    <div class="summary-stat"><div class="sv">${min.toFixed(1)}</div><div class="sk">MIN ${cfg.unit}</div></div>
+    <div class="summary-stat"><div class="sv">${max.toFixed(1)}</div><div class="sk">MAX ${cfg.unit}</div></div>
+    <div class="summary-stat"><div class="sv">${avg.toFixed(1)}</div><div class="sk">MOY ${cfg.unit}</div></div>
+    <div class="summary-stat"><div class="sv">${values.length}</div><div class="sk">POINTS</div></div>
+  `;
+
   const ctx = document.getElementById('main-chart').getContext('2d');
-  if (state.chart) state.chart.destroy();
+  if (S.chart) S.chart.destroy();
 
-  const grad = ctx.createLinearGradient(0, 0, 0, 220);
-  grad.addColorStop(0, cfg.color + '44');
-  grad.addColorStop(1, cfg.color + '00');
+  const gr = ctx.createLinearGradient(0,0,0,240);
+  gr.addColorStop(0, cfg.color + '55');
+  gr.addColorStop(1, cfg.color + '00');
 
-  const fmt = (d) => {
-    if (state.currentDays <= 1) return d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
-    if (state.currentDays <= 7) return d.toLocaleDateString('fr-FR', { weekday:'short', hour:'2-digit', minute:'2-digit' });
-    return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
-  };
+  const datasets = [{
+    label: cfg.label, data: values,
+    borderColor: cfg.color, backgroundColor: gr,
+    borderWidth: 2, fill: true, tension: 0.35,
+    pointRadius: values.length > 300 ? 0 : 2,
+    pointHoverRadius: 5, order: 1,
+  }];
 
-  state.chart = new Chart(ctx, {
+  if (S.stats.min) datasets.push({
+    label: 'Min', data: values.map(() => min),
+    borderColor: '#74c0fc', borderWidth: 1, borderDash: [4,4],
+    pointRadius: 0, fill: false, tension: 0, order: 2,
+  });
+  if (S.stats.max) datasets.push({
+    label: 'Max', data: values.map(() => max),
+    borderColor: '#ff6b6b', borderWidth: 1, borderDash: [4,4],
+    pointRadius: 0, fill: false, tension: 0, order: 3,
+  });
+  if (S.stats.avg) datasets.push({
+    label: 'Moy', data: values.map(() => avg),
+    borderColor: '#ffa94d', borderWidth: 1.5, borderDash: [6,3],
+    pointRadius: 0, fill: false, tension: 0, order: 4,
+  });
+
+  S.chart = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels: labels.map(fmt),
-      datasets: [{
-        data: values,
-        borderColor: cfg.color,
-        backgroundColor: grad,
-        borderWidth: 2,
-        pointRadius: labels.length > 200 ? 0 : 2,
-        pointHoverRadius: 5,
-        fill: true,
-        tension: 0.3,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { intersect: false, mode: 'index' },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0d1520',
-          borderColor: '#1e3048',
-          borderWidth: 1,
-          titleColor: '#4a6a88',
-          bodyColor: '#e8f4ff',
-          titleFont: { family: 'DM Mono', size: 10 },
-          bodyFont: { family: 'DM Mono', size: 13 },
-          callbacks: {
-            label: (ctx) => ` ${ctx.parsed.y.toFixed(1)} ${cfg.unit}`,
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: '#4a6a88', font: { family: 'DM Mono', size: 9 }, maxTicksLimit: 8 },
-          grid: { color: '#1e3048' },
-          border: { color: '#1e3048' },
-        },
-        y: {
-          ticks: { color: '#4a6a88', font: { family: 'DM Mono', size: 9 }, callback: v => v.toFixed(1) + ' ' + cfg.unit },
-          grid: { color: '#1e3048' },
-          border: { color: '#1e3048' },
-        }
-      }
-    }
+    data: {labels: labels.map(d => fmtLabel(d, S.hours)), datasets},
+    options: chartOptions(cfg),
   });
 }
 
-// ══════════════════════════════════════════
+function chartOptions(cfg) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    interaction: {intersect: false, mode: 'index'},
+    plugins: {
+      legend: {display: false},
+      tooltip: {
+        backgroundColor: '#0c1018', borderColor: '#1c2a3a', borderWidth: 1,
+        titleColor: '#3a5060', bodyColor: '#e8f2fa',
+        titleFont: {family:'IBM Plex Mono', size:10},
+        bodyFont: {family:'IBM Plex Mono', size:12},
+        callbacks: {label: c => ` ${c.dataset.label}: ${typeof c.parsed.y === 'number' ? c.parsed.y.toFixed(1) : c.parsed.y} ${cfg.unit}`}
+      }
+    },
+    scales: {
+      x: {ticks:{color:'#3a5060', font:{family:'IBM Plex Mono',size:9}, maxTicksLimit:8}, grid:{color:'#1c2a3a'}, border:{color:'#1c2a3a'}},
+      y: {ticks:{color:'#3a5060', font:{family:'IBM Plex Mono',size:9}, callback: v => v.toFixed(1)}, grid:{color:'#1c2a3a'}, border:{color:'#1c2a3a'}},
+    }
+  };
+}
+
+function fmtLabel(d, hours) {
+  if (!hours || hours <= 6)   return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  if (hours <= 24)             return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  if (hours <= 168)            return d.toLocaleDateString('fr-FR',{weekday:'short',hour:'2-digit',minute:'2-digit'});
+  if (hours <= 720)            return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'2-digit'});
+}
+
+function formatRange(from, to) {
+  const f = new Date(from), t = new Date(to);
+  return f.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) + ' → ' + t.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+}
+
+// ═══════════════════════════════════════════
+// MULTI COMPARE
+// ═══════════════════════════════════════════
+S.cmpSensors = [];
+
+function toggleCmp(key, checked) {
+  if (checked) { if (!S.cmpSensors.includes(key)) S.cmpSensors.push(key); }
+  else S.cmpSensors = S.cmpSensors.filter(k => k !== key);
+  const lbl = document.getElementById('cmp-lbl-' + key);
+  if (lbl) lbl.className = 'cmp-check' + (checked ? ' on' : '');
+  if (S.cmpSensors.length) loadCompare();
+}
+
+async function loadCompare() {
+  if (!S.module || !S.cmpSensors.length) return;
+  const {from, to} = getDateRange();
+  const hours = S.hours || (to - from) / 3600000;
+  const scale = pickScale(hours);
+  try {
+    const all = await Promise.all(S.cmpSensors.map(s =>
+      getMeasure(S.module.deviceId, S.module.moduleId, [s], from, to, scale)
+        .then(raw => ({sensor: s, pts: parseMeasure(raw)}))
+        .catch(() => ({sensor: s, pts: []}))
+    ));
+
+    const ctx = document.getElementById('cmp-chart').getContext('2d');
+    if (S.cmpChart) S.cmpChart.destroy();
+
+    // Normalize to % for multi-axis
+    const datasets = all.map(({sensor, pts}) => {
+      const cfg = SENSORS[sensor];
+      const vals = pts.map(p => p.v);
+      const mn = Math.min(...vals), mx = Math.max(...vals);
+      const norm = vals.map(v => mx === mn ? 50 : ((v - mn)/(mx-mn))*100);
+      return {
+        label: cfg.label,
+        data: norm,
+        borderColor: cfg.color,
+        backgroundColor: cfg.color + '18',
+        borderWidth: 1.5,
+        fill: false, tension: 0.3,
+        pointRadius: 0,
+        originalValues: vals,
+        unit: cfg.unit,
+      };
+    });
+
+    const labels = all[0]?.pts.map(p => fmtLabel(new Date(p.t), hours)) || [];
+
+    S.cmpChart = new Chart(ctx, {
+      type: 'line',
+      data: {labels, datasets},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: {intersect: false, mode: 'index'},
+        plugins: {
+          legend: {
+            display: true,
+            labels: {color:'#8faabb', font:{family:'IBM Plex Mono', size:10}, boxWidth:12}
+          },
+          tooltip: {
+            backgroundColor:'#0c1018', borderColor:'#1c2a3a', borderWidth:1,
+            titleColor:'#3a5060', bodyColor:'#e8f2fa',
+            titleFont:{family:'IBM Plex Mono',size:10},
+            bodyFont:{family:'IBM Plex Mono',size:11},
+            callbacks: {
+              label: (c) => {
+                const v = c.dataset.originalValues?.[c.dataIndex];
+                return ` ${c.dataset.label}: ${v !== undefined ? v.toFixed(1) : ''} ${SENSORS[S.cmpSensors[c.datasetIndex]]?.unit || ''}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {ticks:{color:'#3a5060',font:{family:'IBM Plex Mono',size:9},maxTicksLimit:6},grid:{color:'#1c2a3a'},border:{color:'#1c2a3a'}},
+          y: {ticks:{color:'#3a5060',font:{family:'IBM Plex Mono',size:9},callback:v=>v.toFixed(0)+'%'},grid:{color:'#1c2a3a'},border:{color:'#1c2a3a'},title:{display:true,text:'Valeur normalisée (%)',color:'#3a5060',font:{family:'IBM Plex Mono',size:9}}},
+        }
+      }
+    });
+  } catch(e) { console.error(e); }
+}
+
+// ═══════════════════════════════════════════
+// HEATMAP (30 derniers jours, par heure)
+// ═══════════════════════════════════════════
+async function loadHeatmap() {
+  if (!S.module) return;
+  const sensor = document.getElementById('hm-sensor').value;
+  const to = Date.now();
+  const from = to - 30 * 86400000;
+  try {
+    const raw = await getMeasure(S.module.deviceId, S.module.moduleId, [sensor], from, to, '1hour');
+    S.hmData = {raw, sensor};
+    renderHeatmap();
+  } catch(e) { document.getElementById('heatmap-wrap').innerHTML = `<div style="color:var(--dim);font-size:11px;padding:8px">Données non disponibles</div>`; }
+}
+
+function renderHeatmap() {
+  if (!S.hmData) { loadHeatmap(); return; }
+  const {raw, sensor} = S.hmData;
+  const cfg = SENSORS[sensor] || SENSORS.Temperature;
+  const pts = parseMeasure(raw);
+  if (!pts.length) return;
+
+  // Build 30-day × 24-hour grid
+  const grid = {}; // key: "day-hour" -> [values]
+  const days = [];
+  pts.forEach(({t, v}) => {
+    const d = new Date(t);
+    const day = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+    const hour = d.getHours();
+    const key = `${day}-${hour}`;
+    if (!grid[key]) grid[key] = [];
+    grid[key].push(v);
+    if (!days.includes(day)) days.push(day);
+  });
+
+  const vals = pts.map(p => p.v);
+  const mn = Math.min(...vals), mx = Math.max(...vals);
+  const norm = v => (mx === mn) ? 0.5 : (v - mn) / (mx - mn);
+
+  const wrap = document.getElementById('heatmap-wrap');
+
+  let html = `<div style="overflow-x:auto">`;
+  // Hour labels
+  html += `<div style="display:grid;grid-template-columns:32px repeat(24,1fr);gap:2px;margin-bottom:2px">`;
+  html += `<div></div>`;
+  for (let h = 0; h < 24; h++) html += `<div style="font-size:8px;color:var(--dim);text-align:center">${h}</div>`;
+  html += `</div>`;
+
+  // Grid
+  html += `<div style="display:grid;grid-template-columns:32px repeat(24,1fr);gap:2px">`;
+  days.slice(-30).forEach(day => {
+    html += `<div style="font-size:8px;color:var(--dim);display:flex;align-items:center">${day.slice(0,5)}</div>`;
+    for (let h = 0; h < 24; h++) {
+      const key = `${day}-${h}`;
+      const vals2 = grid[key];
+      if (!vals2) { html += `<div style="border-radius:3px;background:var(--bg3);aspect-ratio:1"></div>`; continue; }
+      const avg = vals2.reduce((a,b)=>a+b,0)/vals2.length;
+      const n = norm(avg);
+      const color = interpolateColor('#0a2a3a', cfg.color, n);
+      const tip = `${day} ${h}h: ${avg.toFixed(1)} ${cfg.unit}`;
+      html += `<div class="hm-cell" style="background:${color}" title="${tip}"></div>`;
+    }
+  });
+  html += `</div></div>`;
+
+  // Legend
+  html += `<div class="hm-legend"><span>${mn.toFixed(1)}</span><div class="hm-gradient" style="--hm-low:#0a2a3a;--hm-high:${cfg.color}"></div><span>${mx.toFixed(1)} ${cfg.unit}</span></div>`;
+
+  wrap.innerHTML = html;
+}
+
+function interpolateColor(hex1, hex2, t) {
+  const r1 = parseInt(hex1.slice(1,3),16), g1 = parseInt(hex1.slice(3,5),16), b1 = parseInt(hex1.slice(5,7),16);
+  const r2 = parseInt(hex2.slice(1,3),16), g2 = parseInt(hex2.slice(3,5),16), b2 = parseInt(hex2.slice(5,7),16);
+  const r = Math.round(r1 + (r2-r1)*t);
+  const g = Math.round(g1 + (g2-g1)*t);
+  const b = Math.round(b1 + (b2-b1)*t);
+  return `rgb(${r},${g},${b})`;
+}
+
+// ═══════════════════════════════════════════
 // ALERTS
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderAlerts() {
   const el = document.getElementById('alerts-list');
-  if (!state.alerts.length) {
-    el.innerHTML = '<div style="font-size:11px;color:var(--text-dim);padding:4px 0">Aucune alerte configurée. Cliquez sur "+ Ajouter" pour en créer une.</div>';
+  if (!S.alerts.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--dim);padding:4px 0">Aucune alerte. Cliquez "+ Ajouter".</div>';
     return;
   }
-  el.innerHTML = state.alerts.map((a, i) => `
-    <div class="alert-rule">
-      <select onchange="updateAlert(${i},'sensor',this.value)">
+  el.innerHTML = S.alerts.map((a, i) => `
+    <div class="alert-item">
+      <select onchange="updateAlert(${i},'sensor',this.value)" style="flex:1.5">
         ${Object.entries(SENSORS).map(([k,c]) => `<option value="${k}" ${a.sensor===k?'selected':''}>${c.icon} ${c.label}</option>`).join('')}
       </select>
-      <select onchange="updateAlert(${i},'op',this.value)">
-        <option value=">" ${a.op==='>'?'selected':''}>&gt; supérieur à</option>
-        <option value="<" ${a.op==='<'?'selected':''}>&lt; inférieur à</option>
+      <select onchange="updateAlert(${i},'op',this.value)" style="flex:1">
+        <option value=">" ${a.op==='>'?'selected':''}>&gt; sup.</option>
+        <option value="<" ${a.op==='<'?'selected':''}>&lt; inf.</option>
       </select>
-      <input type="number" value="${a.threshold}" onchange="updateAlert(${i},'threshold',parseFloat(this.value))" style="max-width:70px">
-      <span style="font-size:10px;color:var(--text-dim)">${SENSORS[a.sensor]?.unit || ''}</span>
-      <span class="alert-badge ${a.status || 'ok'}">${a.status === 'danger' ? '🔴 Dépassé' : a.status === 'warning' ? '🟡 Proche' : '🟢 OK'}</span>
+      <input type="number" value="${a.threshold}" step="0.1"
+        onchange="updateAlert(${i},'threshold',parseFloat(this.value))" style="max-width:70px">
+      <span style="font-size:10px;color:var(--dim)">${SENSORS[a.sensor]?.unit||''}</span>
+      <span class="badge ${a.status==='danger'?'badge-danger':a.status==='warning'?'badge-warn':'badge-ok'}">
+        ${a.status==='danger'?'🔴 Alerte':a.status==='warning'?'🟡 Proche':'🟢 OK'}
+      </span>
       <button class="btn-icon" onclick="removeAlert(${i})">✕</button>
     </div>
   `).join('');
 }
 
-function addAlertRule() {
-  state.alerts.push({ sensor: 'Temperature', op: '>', threshold: 30, status: 'ok' });
-  saveAlerts();
-  renderAlerts();
+function addAlert() {
+  S.alerts.push({sensor:'Temperature', op:'>', threshold:30, status:'ok'});
+  saveAlerts(); renderAlerts();
 }
-
-function updateAlert(i, key, val) {
-  state.alerts[i][key] = val;
-  saveAlerts();
-  checkAlerts();
-}
-
-function removeAlert(i) {
-  state.alerts.splice(i, 1);
-  saveAlerts();
-  renderAlerts();
-}
-
-function saveAlerts() {
-  localStorage.setItem('nat_alerts', JSON.stringify(state.alerts));
-}
+function updateAlert(i, k, v) { S.alerts[i][k] = v; saveAlerts(); checkAlerts(); }
+function removeAlert(i) { S.alerts.splice(i,1); saveAlerts(); renderAlerts(); }
+function saveAlerts() { localStorage.setItem('na_alerts', JSON.stringify(S.alerts)); }
 
 function checkAlerts() {
-  if (!state.currentModule) return;
-  const { deviceId, moduleId } = state.currentModule;
-  const data = getModuleData(deviceId, moduleId);
-  let triggered = 0;
-
-  state.alerts.forEach(a => {
-    const val = data[a.sensor] ?? data[a.sensor?.toLowerCase()];
-    if (val === undefined) { a.status = 'ok'; return; }
-    const diff = Math.abs(val - a.threshold);
-    const pct = diff / Math.abs(a.threshold);
-    if (a.op === '>' ? val > a.threshold : val < a.threshold) { a.status = 'danger'; triggered++; }
-    else if (pct < 0.1) a.status = 'warning';
+  const data = getModuleData();
+  let danger = 0;
+  S.alerts.forEach(a => {
+    const v = data[a.sensor];
+    if (v === undefined) { a.status = 'ok'; return; }
+    const diff = Math.abs(v - a.threshold) / Math.max(Math.abs(a.threshold), 1);
+    if (a.op === '>' ? v > a.threshold : v < a.threshold) { a.status = 'danger'; danger++; }
+    else if (diff < 0.1) a.status = 'warning';
     else a.status = 'ok';
   });
-
-  saveAlerts();
-  renderAlerts();
-
-  const statusEl = document.getElementById('alerts-status');
-  statusEl.textContent = triggered ? `⚠️ ${triggered} alerte(s) déclenchée(s) !` : '✅ Toutes les conditions sont dans les limites.';
-  statusEl.style.color = triggered ? 'var(--accent3)' : 'var(--accent4)';
+  saveAlerts(); renderAlerts();
+  const st = document.getElementById('alerts-status');
+  st.textContent = danger ? `⚠️ ${danger} alerte(s) déclenchée(s) !` : '✅ Toutes les valeurs sont dans les limites.';
+  st.style.color = danger ? 'var(--accentB)' : 'var(--accent)';
 }
 
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════
 // EXPORT
-// ══════════════════════════════════════════
-function exportCSV() {
-  if (!state.chartData) { toast('Chargez un graphique d\'abord'); return; }
-  const { labels, values, sensor } = state.chartData;
-  const cfg = SENSORS[sensor];
-  const lines = ['Datetime,' + cfg.label + ' (' + cfg.unit + ')'];
-  labels.forEach((l, i) => {
-    lines.push(`"${l.toLocaleString('fr-FR')}",${values[i]}`);
-  });
-  downloadFile(lines.join('\n'), `netatmo_${sensor}_${new Date().toISOString().slice(0,10)}.csv`, 'text/csv');
-  toast('Export CSV téléchargé ✓');
+// ═══════════════════════════════════════════
+function doExport(fmt) {
+  if (!S.chartData) { toast('Chargez un graphique d\'abord', 'err'); return; }
+  const {pts, cfg, sensor} = S.chartData;
+  const fname = `netatmo_${sensor}_${new Date().toISOString().slice(0,10)}`;
+  if (fmt === 'csv') {
+    const lines = [`Datetime,${cfg.label} (${cfg.unit}),Timestamp`];
+    pts.forEach(p => lines.push(`"${new Date(p.t).toLocaleString('fr-FR')}",${p.v},${p.t}`));
+    download(lines.join('\n'), fname + '.csv', 'text/csv');
+    toast('CSV exporté ✓');
+  } else {
+    const json = {sensor, label:cfg.label, unit:cfg.unit, exported:new Date().toISOString(),
+      data:pts.map(p => ({datetime:new Date(p.t).toISOString(), timestamp:p.t, value:p.v}))};
+    download(JSON.stringify(json,null,2), fname + '.json', 'application/json');
+    toast('JSON exporté ✓');
+  }
 }
 
-function exportJSON() {
-  if (!state.chartData) { toast('Chargez un graphique d\'abord'); return; }
-  const { labels, values, sensor } = state.chartData;
-  const cfg = SENSORS[sensor];
-  const json = {
-    sensor, label: cfg.label, unit: cfg.unit,
-    exported_at: new Date().toISOString(),
-    data: labels.map((l, i) => ({ datetime: l.toISOString(), value: values[i] }))
-  };
-  downloadFile(JSON.stringify(json, null, 2), `netatmo_${sensor}_${new Date().toISOString().slice(0,10)}.json`, 'application/json');
-  toast('Export JSON téléchargé ✓');
-}
-
-function downloadFile(content, filename, type) {
+function download(content, name, type) {
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([content], { type }));
-  a.download = filename;
-  a.click();
+  a.href = URL.createObjectURL(new Blob([content],{type}));
+  a.download = name; a.click();
 }
 
-// ══════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════
-function showError(msg) {
-  const el = document.getElementById('auth-error');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-let toastTimer;
-function toast(msg, isError = false) {
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+let _tt;
+function toast(msg, type='ok') {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.style.borderColor = isError ? 'var(--accent3)' : 'var(--accent)';
-  el.style.color = isError ? 'var(--accent3)' : 'var(--accent)';
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  el.className = `toast show ${type}`;
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════
 // INIT
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════
 async function init() {
-  // Handle OAuth callback
-  if (window.location.search.includes('code=')) {
-    const ok = await handleCallback();
-    if (!ok) { showAuthScreen(); return; }
+  if (location.search.includes('code=')) {
+    const ok = await handleCode();
+    if (!ok) { showAuth(); return; }
   }
-
-  if (state.accessToken) {
-    showDashboard();
+  if (S.token) {
+    showDash();
     renderAlerts();
-    try {
-      await refreshAll();
-    } catch(e) {
-      toast('Erreur de chargement, veuillez vous reconnecter', true);
-      setTimeout(logout, 2000);
-    }
+    try { await refreshAll(); }
+    catch(e) { toast('Reconnexion nécessaire', 'err'); setTimeout(logout, 2000); }
   } else {
-    showAuthScreen();
+    showAuth();
   }
 }
 
