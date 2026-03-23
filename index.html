@@ -558,6 +558,7 @@ function switchTab(name, btn) {
   document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
   btn.classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'prix') renderTranches();
 }
 
 // ---- MISE A JOUR PRIX ----
@@ -719,8 +720,6 @@ function exportPrix() {
   XLSX.writeFile(wb,'MAJ_Prix_CAT_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
-// Initialize tranches on load
-renderTranches();
 
 
 </script>
