@@ -565,6 +565,10 @@ function buildTranches() {
 }
 
 function downloadTranche(chunk, start, end) {
+  if (typeof XLSX === 'undefined') {
+    alert('La librairie XLSX n\'est pas encore charg\u00e9e. Attendez quelques secondes et r\u00e9essayez.');
+    return;
+  }
   var rows = chunk.map(function(code) { return [1, code.slice(2)]; });
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(rows);
@@ -655,6 +659,18 @@ function exportPrix(){
   XLSX.writeFile(wb,'MAJ_Prix_CAT_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
+// Force build on DOMContentLoaded as safety net
+document.addEventListener('DOMContentLoaded', function() {
+  // If somehow prix tab is active, build tranches
+  var prixPanel = document.getElementById('tab-prix');
+  if (prixPanel && prixPanel.classList.contains('active')) {
+    buildTranches();
+  }
+});
+
+// Also expose buildTranches globally for manual debug
+window.buildTranches = buildTranches;
+window.ALL_REFS_COUNT = ALL_REFS.length;
 </script>
 </body>
 </html>
