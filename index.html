@@ -469,7 +469,6 @@ function exportStock(){
   exp.forEach(function(r){lines.push(r.gc+','+r.qty);});
   dlCSV(lines.join('\n'),'Entrees_Stock_CAT_');
 }
-
 function exportAlerts(){
   var exp=results.filter(function(r){return r.priceAlert;});
   if(!exp.length) return;
@@ -529,12 +528,14 @@ function addEntry(){
 
 // ==================== PRIX TAB ====================
 var prixData = [];
+var tranchesBuilt = false;
 
 function buildTranches() {
   var container = document.getElementById('tranches-list');
-  if (container.children.length > 0) return;
+  if (tranchesBuilt && container.children.length > 0) return;
+  tranchesBuilt = true;
   var TRANCHE = 500;
-  var totalEl = document.getElementById('total-refs');
+  var totalEl   = document.getElementById('total-refs');
   container.innerHTML = '';
   totalEl.textContent = ALL_REFS.length + ' r\u00e9f\u00e9rences \u2014 ' + Math.ceil(ALL_REFS.length / TRANCHE) + ' tranches de ' + TRANCHE;
 
@@ -565,10 +566,6 @@ function buildTranches() {
 }
 
 function downloadTranche(chunk, start, end) {
-  if (typeof XLSX === 'undefined') {
-    alert('La librairie XLSX n\'est pas encore charg\u00e9e. Attendez quelques secondes et r\u00e9essayez.');
-    return;
-  }
   var rows = chunk.map(function(code) { return [1, code.slice(2)]; });
   var wb = XLSX.utils.book_new();
   var ws = XLSX.utils.aoa_to_sheet(rows);
@@ -659,18 +656,6 @@ function exportPrix(){
   XLSX.writeFile(wb,'MAJ_Prix_CAT_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
-// Force build on DOMContentLoaded as safety net
-document.addEventListener('DOMContentLoaded', function() {
-  // If somehow prix tab is active, build tranches
-  var prixPanel = document.getElementById('tab-prix');
-  if (prixPanel && prixPanel.classList.contains('active')) {
-    buildTranches();
-  }
-});
-
-// Also expose buildTranches globally for manual debug
-window.buildTranches = buildTranches;
-window.ALL_REFS_COUNT = ALL_REFS.length;
 </script>
 </body>
 </html>
