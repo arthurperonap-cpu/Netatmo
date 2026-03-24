@@ -44,8 +44,6 @@ header{background:var(--y);}
 .bp:disabled{background:var(--m);color:var(--x);cursor:not-allowed;}
 .be1{background:var(--gr);color:#fff;display:none;}
 .be1:hover{background:#43a047;}
-.be2{background:#2196F3;color:#fff;display:none;}
-.be2:hover{background:#1976D2;}
 .be3{background:var(--or);color:#fff;display:none;}
 .be3:hover{background:#F57C00;}
 .bdb{background:var(--m);color:var(--t);font-size:10px;}
@@ -114,7 +112,7 @@ td{padding:10px 14px;}
   <div class="logo">CAT</div>
   <div>
     <div class="htitle">Analyse Commandes CAT &#8594; Gestimum</div>
-    <div class="hsub">Entr&#233;es stock &#183; Nouveaux articles &#183; Alertes prix &#183; Mise &#224; jour prix</div>
+    <div class="hsub">Entr&#233;es stock &#183; Alertes prix &#183; Mise &#224; jour prix</div>
   </div>
 </div></header>
 
@@ -144,7 +142,6 @@ td{padding:10px 14px;}
   <div class="abar">
     <button class="btn bp" id="btnA" disabled onclick="runAnalysis()">&#9654; Analyser</button>
     <button class="btn be1" id="btnE1" onclick="exportStock()">&#8595; Entr&#233;es stock</button>
-    <button class="btn be2" id="btnE2" onclick="exportAbsent()">&#8595; Nouveaux articles</button>
     <button class="btn be3" id="btnE3" onclick="exportAlerts()">&#9888; Alertes prix</button>
     <span class="smsg" id="smsg">Chargez un ou plusieurs fichiers CSV pour d&#233;marrer.</span>
     <button class="btn bdb" onclick="openModal()">&#9881; Base stock</button>
@@ -422,7 +419,6 @@ function updateStats() {
 }
 function updateExportBtns() {
   document.getElementById('btnE1').style.display=results.filter(function(r){return r.status==='gere';}).length?'inline-block':'none';
-  document.getElementById('btnE2').style.display=results.filter(function(r){return r.status==='absent';}).length?'inline-block':'none';
   document.getElementById('btnE3').style.display=results.filter(function(r){return r.priceAlert;}).length?'inline-block':'none';
 }
 function renderResults(data) {
@@ -473,15 +469,7 @@ function exportStock(){
   exp.forEach(function(r){lines.push(r.gc+','+r.qty);});
   dlCSV(lines.join('\n'),'Entrees_Stock_CAT_');
 }
-function exportAbsent(){
-  var exp=results.filter(function(r){return r.status==='absent';});
-  if(!exp.length) return;
-  var seen={},uniq=[];
-  exp.forEach(function(r){if(!seen[r.gc]){seen[r.gc]=true;uniq.push(r);}});
-  var lines=['Code article (Gestimum),Designation EN (CAT),Cout unitaire HT (EUR)'];
-  uniq.forEach(function(r){lines.push(r.gc+','+r.desc.replace(/,/g,';')+','+(r.csvPrice>0?r.csvPrice.toFixed(2):''));});
-  dlCSV(lines.join('\n'),'Nouveaux_Articles_CAT_');
-}
+
 function exportAlerts(){
   var exp=results.filter(function(r){return r.priceAlert;});
   if(!exp.length) return;
@@ -541,14 +529,12 @@ function addEntry(){
 
 // ==================== PRIX TAB ====================
 var prixData = [];
-var tranchesBuilt = false;
 
 function buildTranches() {
-  if (tranchesBuilt) return;
-  tranchesBuilt = true;
-  var TRANCHE = 500;
   var container = document.getElementById('tranches-list');
-  var totalEl   = document.getElementById('total-refs');
+  if (container.children.length > 0) return;
+  var TRANCHE = 500;
+  var totalEl = document.getElementById('total-refs');
   container.innerHTML = '';
   totalEl.textContent = ALL_REFS.length + ' r\u00e9f\u00e9rences \u2014 ' + Math.ceil(ALL_REFS.length / TRANCHE) + ' tranches de ' + TRANCHE;
 
