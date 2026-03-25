@@ -532,10 +532,11 @@ var tranchesBuilt = false;
 
 function buildTranches() {
   var container = document.getElementById('tranches-list');
+  if (!container) { console.warn('tranches-list introuvable'); return; }
   if (tranchesBuilt && container.children.length > 0) return;
   tranchesBuilt = true;
+  window.tranchesBuilt = true;
   var TRANCHE = 500;
-  var totalEl   = document.getElementById('total-refs');
   container.innerHTML = '';
   totalEl.textContent = ALL_REFS.length + ' r\u00e9f\u00e9rences \u2014 ' + Math.ceil(ALL_REFS.length / TRANCHE) + ' tranches de ' + TRANCHE;
 
@@ -573,6 +574,16 @@ function downloadTranche(chunk, start, end) {
   XLSX.utils.book_append_sheet(wb, ws, 'Import');
   XLSX.writeFile(wb, 'Import_Panier_CAT_' + start + '_' + end + '.xlsx');
 }
+
+// Expose variables globally for console access
+window.ALL_REFS = ALL_REFS;
+window.tranchesBuilt = tranchesBuilt;
+
+// Auto-build tranches on load so console access works immediately
+document.addEventListener('DOMContentLoaded', function() {
+  buildTranches();
+  window.tranchesBuilt = tranchesBuilt;
+});
 
 document.getElementById('dz-prix').addEventListener('dragover', function(e){ e.preventDefault(); this.style.borderColor='#F5BE00'; });
 document.getElementById('dz-prix').addEventListener('dragleave', function(){ this.style.borderColor=''; });
